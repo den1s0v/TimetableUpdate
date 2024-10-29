@@ -75,8 +75,12 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'timetable',  # Укажи имя своей базы данных
+        'USER': 'root',  # Укажи своего пользователя MySQL
+        'PASSWORD': '1234',  # Укажи пароль для подключения
+        'HOST': 'localhost',  # Или другой хост, если не локальный сервер
+        'PORT': '3306',  # Стандартный порт для MySQL
     }
 }
 
