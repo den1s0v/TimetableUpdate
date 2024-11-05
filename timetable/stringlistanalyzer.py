@@ -14,14 +14,13 @@ class StringListAnalyzer:
         :param analyze_strings: Список строк для анализа
         :param compare_strings: Список строк для сравнения
         """
-        # Создаём переменные класса
+        # создание переменных класса
         self.__analyze_strings = [] # Список строк для анализа
         self.__compare_strings = [] # Список строк для сравнения
         self.__most_similar_strings = dict() # Словарь (строка) -> (максимально похожая строка)
         self.__max_ratio_strings = dict() # Словарь (строка) -> (степень максимальной похожести)
-        self.__is_analyzed = False
 
-        # Задаём значение спискам
+        # Задание значений спискам
         if analyze_strings is not None:
             self.set_analyze_strings(analyze_strings)
         if compare_strings is not None:
@@ -47,51 +46,13 @@ class StringListAnalyzer:
                     self.__max_ratio_strings[analyze_string] = ratio
                     self.__most_similar_strings[analyze_string] = compare_string
 
-        # Обновить состояние анализа
-        self.__is_analyzed = True
         return self
-
-    def set_analyze_strings(self, analyze_strings:list):
-        """
-        Задаёт список строк для анализа
-        :param analyze_strings: Список строк для анализа
-        :return: Текущий экземпляр класса
-        """
-        # Обновить значение
-        self.__analyze_strings = analyze_strings
-
-        # Сбросить результаты вычислений
-        self.__drop_results()
-        return self
-
-    def set_compare_strings(self, compare_strings:list):
-        """
-        Задаёт список строк для сравнения
-        :param compare_strings: Список строк для сравнения
-        :return: Текущий экземпляр класса
-        """
-        # Обновить значение
-        self.__compare_strings = compare_strings
-
-        # Сбросить результаты вычислений
-        self.__drop_results()
-        return self
-
-    def is_analyzed(self):
-        """
-        Проверяет, был ли выполнен анализ для данного списка строк
-        :return: Результат проверки
-        """
-        return self.__is_analyzed
 
     def get_analyze_strings(self):
         """
         Возвращает список строк для анализа
         :return: Список строк
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Вернуть результат
         return self.__analyze_strings
 
@@ -100,9 +61,6 @@ class StringListAnalyzer:
         Возвращает список строк для сравнения
         :return: Список строк для сравнения
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Вернуть результат
         return self.__compare_strings
 
@@ -112,21 +70,15 @@ class StringListAnalyzer:
         :param string: Строка из списка для анализа, для которой ищется максимально похожая строка
         :return: Строка из списка для сравнения
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Вернуть результат
         return self.__most_similar_strings.get(string, "")
 
     def get_max_compare_ratio_for_string(self, string:str):
         """
-        Возвращает степень похожести для строки из списка для анализа
+        Возвращает максимальную степень похожести для строки из списка для анализа
         :param string: Строка из списка для анализа, для которой ищется максимальная степень похожести
         :return: Степень - это число на отрезке [0,1]
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Вернуть результат
         return self.__max_ratio_strings.get(string, 0)
 
@@ -135,9 +87,6 @@ class StringListAnalyzer:
         Возвращает список слов, с максимальным коэффициентом похожести
         :return: Список слов с максимальным коэффициентом похожести
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Рассчитать максимальное значение коэффициента
         max_ratio = self.get_max_ratio()
 
@@ -151,9 +100,6 @@ class StringListAnalyzer:
         :param round_number: Количество знаков после запятой для округления (опционально)
         :return: Список символов
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Выбросить исключение, если значение округления не соответствует допустимому
         if round_number is not None and round_number < 0:
             raise Exception(f"Round number must be greater than zero. Now round number = {round_number}.")
@@ -186,9 +132,6 @@ class StringListAnalyzer:
         :param max_ratio: Максимальное значение коэффициента похожести
         :return: Список строк
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Список строк
         result_strings = []
 
@@ -206,28 +149,5 @@ class StringListAnalyzer:
         Определяет максимальную степень похожести среди всех слов
         :return: Максимальная степень похожести
         """
-        # Проверить данные на релевантность
-        self.__check_results_relevance()
-
         # Вернуть значение
         return max(self.__max_ratio_strings.keys())
-
-    def __drop_results(self):
-        """
-        Сбрасывает результаты анализа
-        :return: Текущий экземпляр класса
-        """
-        # Сброс значений
-        self.__most_similar_strings = dict()
-        self.__max_ratio_strings = dict()
-
-        # Обновить состояние анализа
-        self.__is_analyzed = False
-        return self
-
-    def __check_results_relevance(self):
-        """
-        Выбрасывает исключение, если наборы строк не проанализированны
-        """
-        if not self.__is_analyzed:
-            raise Exception("Strings are not analyzed")
