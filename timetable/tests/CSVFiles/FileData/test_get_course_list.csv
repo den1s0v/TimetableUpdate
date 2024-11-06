@@ -1,0 +1,31 @@
+test_name,name,expected_list
+simple test left numbers,курс 1,[1]
+short range left numbers,курс 1-2,"[1,2]"
+normal range left numbers,курс 2-4,"[2,3,4]"
+reverce range left numbers,курс 3-1,[]
+large values left numbers 1,курс 24,[]
+large values left numbers 2,курс 2025,[]
+large values in range left numbers 1,курс 24-25,[]
+large values in range left numbers 2,курс 2010-2011,[]
+large values in range left numbers 3,курс 19-26,[]
+large values in range left numbers 4,курс 1010-2011,[]
+range with normal and large values left numbers,курс 1 - 1012,"[1,2,3,4,5,6]"
+simple test right numbers,1 курс,[1]
+short range right numbers,1-2 курс,"[1,2]"
+normal range right numbers,2-4 курс,"[2,3,4]"
+reverce range right numbers,3-1 курс,[]
+large values right numbers 1,24 курс,[]
+large values right numbers 2,2025 курс,[]
+large values in range right numbers 1,24-25 курс,[]
+large values in range right numbers 2,2010-2011 курс,[]
+large values in range right numbers 3,19-26 курс,[]
+large values in range right numbers 4,1010-2011 курс,[]
+range with normal and large values right numbers,1 - 1012 курс,"[1,2,3,4,5,6]"
+with other words,факультет курс 1 мой,[1]
+no correct words,1 хаха,[]
+other mark word,год 1,[1]
+numbers on both sides,1 курс 2,"[1,2]"
+duplicate numbers,"курс 1, 1, 1 ",[1]
+numbers on both sides with other words 1,год 2 курс 1,"[1, 2]"
+numbers on both sides with other words 2,2 курс 1 год,"[1, 2]"
+numbers on both sides but one is too large,год 2024 курс 1,[1]

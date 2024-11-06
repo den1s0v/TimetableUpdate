@@ -1,0 +1,7 @@
+test_name,path,expected_dir,will_none
+simple search,dir1/dir2/степень/file.xls,степень,""
+similar word,dir1/dir2/Степени/file.xls,Степени,""
+no similar word,dir1/dir2/dir3/file.xls,None,True
+many similar word,dir1/Cтепени/степень/остепенится.1.xls,степень,
+some similar words,"dir/Бакалавриат, специалитет/file.xls","Бакалавриат, специалитет",
+more similar words better,"степень/Бакалавриат, специалитет/file.xls","Бакалавриат, специалитет",

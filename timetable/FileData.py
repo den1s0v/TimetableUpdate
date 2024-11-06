@@ -1,10 +1,5 @@
-from cssutils.helper import string
-
-from parser import WebParser
 import re
-from stringlistanalyzer import StringListAnalyzer
-import timetable.models as models
-
+from timetable.stringlistanalyzer import StringListAnalyzer
 
 class FileData:
     """
@@ -88,18 +83,18 @@ class FileData:
         Рассчитывает все параметры для файла
         :return: Текущий экземпляр класса
         """
-        self.__name_from_path = self.__get_file_name_from_path(self.__path)  # Имя файла из пути
-        self.__degree = self.__get_degree(self.__path)  # Степень обучения (бакалавриат, магистратура и другие)
-        self.__education_form = self.__get_education_form(self.__path)  # Форма обучения (очная, заочная и другие)
-        self.__faculty = self.__get_faculty(self.__path)  # Факультет обучения
-        self.__course = self.__get_course_list(self.__name_from_path) # Список курсов
+        self.__name_from_path = self._get_file_name_from_path(self.__path)  # Имя файла из пути
+        self.__degree = self._get_degree(self.__path)  # Степень обучения (бакалавриат, магистратура и другие)
+        self.__education_form = self._get_education_form(self.__path)  # Форма обучения (очная, заочная и другие)
+        self.__faculty = self._get_faculty(self.__path)  # Факультет обучения
+        self.__course = self._get_course_list(self.__name_from_path) # Список курсов
         self.__correct_name = self.get_correct_file_name(self.__name)  # Корректное имя файла
         self.__correct_name_from_path = self.get_correct_file_name(self.__name_from_path)  # Корректное имя файла из пути
         self.__correct_path = self.__get_correct_path(self.__path)  # Корректный путь к файлу
         return self
 
     @classmethod
-    def __get_degree(cls, path:str|list):
+    def _get_degree(cls, path: str | list):
         """
         Ищет степень обучения в пути файла.
         Путь может быть представлен в виде списка директорий, так и классической строки "dir1/dir2/dir3/".
@@ -111,7 +106,7 @@ class FileData:
         return cls.__get_best_element(path, lambda string: cls.__get_degree_word_count(string))
 
     @classmethod
-    def __get_education_form(cls, path:str|list):
+    def _get_education_form(cls, path: str | list):
         """
         Ищет форму обучения в пути файла.
         Путь может быть представлен в виде списка директорий, так и классической строки "dir1/dir2/dir3/".
@@ -123,7 +118,7 @@ class FileData:
         return cls.__get_best_element(path, lambda string: cls.__get_education_form_word_count(string))
 
     @classmethod
-    def __get_faculty(cls, path:str|list):
+    def _get_faculty(cls, path: str | list):
         """
         Ищет факультет в пути файла.
         Путь может быть представлен в виде списка директорий, так и классической строки "dir1/dir2/dir3/"
@@ -152,7 +147,7 @@ class FileData:
             return string
 
     @classmethod
-    def __get_course_list(cls, string:str):
+    def _get_course_list(cls, string:str):
         """
         Найти номера курсов
         :param string: Строка с номером курса
@@ -165,7 +160,7 @@ class FileData:
         for mark_word in cls._COURSE_WORDS:
             # Расчёт чисел
             numbers = cls.__FindNumbersByMarkWord(string, mark_word).get_list()
-            numbers = [s for s in numbers if 0 < s < 7]
+            numbers = list(set(s for s in numbers if 0 < s < 7))
 
             # Завершить поиск, если есть числа
             if len(numbers) > 0:
@@ -232,7 +227,7 @@ class FileData:
                 right_numbers = cls.__get_first_elements_in_list(right_words, lambda word: cls.__is_number_or_number_range(word))
 
                 # Перейти к следующему, если числа не были найдены
-                if len(left_numbers) == 0 or len(right_numbers) == 0:
+                if len(left_numbers) == 0 and len(right_numbers) == 0:
                     continue
 
                 # Если числа есть только с одной стороны, то завершить анализ
@@ -277,7 +272,7 @@ class FileData:
             :param string: Строка
             :return: Список строк
             """
-            return re.findall(r'\b(\w+|\d+\s*-\s*\d+)\b', string)
+            return re.findall(r'\b(\d+\s*-\s*\d+|\w+)\b', string)
 
         @staticmethod
         def __get_first_elements_in_list(elements:list, condition):
@@ -302,7 +297,7 @@ class FileData:
             :param string: Строка
             :return: Результат проверки
             """
-            return re.search(r'\d+|\d+\s*-\s*\d+', string) is not None
+            return re.search(r'\d+\s*-\s*\d+|\d+', string) is not None
 
         @staticmethod
         def __get_number_list(string_list:list[str]) -> list[int]:
@@ -317,7 +312,7 @@ class FileData:
             # Для каждой строки
             for string in string_list:
                 # Добавить диапазон
-                if string.find('-'):
+                if string.find('-') > 0:
                     left_number, right_number = string.split('-')[0:2]
                     numbers += list(range(int(left_number), int(right_number) + 1))
                 # Добавить число
@@ -331,7 +326,7 @@ class FileData:
             return sorted(numbers)
 
     @classmethod
-    def __get_file_name_from_path(cls, path: str):
+    def _get_file_name_from_path(cls, path: str):
         """
         Вычисляет имя файла из пути. Путь представлен в виде классической строки "dir1/dir2/dir3/filename".
         Тип файла (расширение) отбрасывается.
@@ -342,7 +337,7 @@ class FileData:
         file = path.split('/')[-1]
 
         # Удалить расширение файла
-        file_name = re.sub(r'\.[А-ЯЁA-Zа-яёa-z]$', "", file)
+        file_name = re.sub(r'\.[А-ЯЁA-Zа-яёa-z]*$', "", file)
 
         # Вернуть имя файла
         return file_name
@@ -437,7 +432,7 @@ class FileData:
         return re.sub(r'\s+', ' ', string).strip()
 
     @staticmethod
-    def __get_best_element(elements:list, heuristic_function, min_heuristic = -1000):
+    def __get_best_element(elements:list, heuristic_function, min_heuristic = 0):
         """
         Определяет наилучший элемент в списке по эвристической функции
         :param elements: Список элементов
@@ -449,17 +444,17 @@ class FileData:
         max_heuristic = min_heuristic
 
         # Элемент с наилучшей эвристикой
-        element = None
+        best_element = None
 
         # Поиск наилучшего значения
         for element in elements:
             heuristic = heuristic_function(element)
             if heuristic > max_heuristic:
                 max_heuristic = heuristic
-                element = element
+                best_element = element
 
         # Вернуть наилучший элемент
-        return element
+        return best_element
 
     @classmethod
     def __get_degree_word_count(cls, string:str):

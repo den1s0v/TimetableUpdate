@@ -1,0 +1,12 @@
+test_name,path,filename
+simple test,dir1/dir2/file.txt,file
+only file name,file.txt,file
+without mimetype,dir1/dir2/file,file
+many dirs,dir1/dir2/dir3/dir4/dir5/dir6/dir7/dir8/dir9/dir10/dir11/dir12/dir13/dir14/dir15/dir16/dir17/dir18/dir19/dir20/file.txt,file
+one dir,dir1/file.txt,file
+long dir name,long_dir_dklfsdfahsffkhasfhqpeufqpwefqwefqwe/file.txt,file
+short dir name,a/b/c/file.txt,file
+long file name,dir1/dir2/long_file_name_sadhwpqeifrhpqweuihfq.txt,long_file_name_sadhwpqeifrhpqweuihfq
+short file name,dir1/dir2/a.txt,a
+long mime type,dir1/dir2/file.txtxdfkadpfhqerpfq,file
+short mime type,dir1/dir2/file.t,file
