@@ -1,0 +1,11 @@
+test_name,name,correct name
+dell extra spaces between words,1     курс.xls,1 курс.xls
+dell extra spaces in the end,1 курс.xls        ,1 курс.xls
+dell extra spaces in start,      1 курс.xls,1 курс.xls
+dell extra word in the dell extra spaces in the end,1 курс.xls автосохранённый,1 курс.xls
+dell extra word in the dell extra spaces in start,1 курс автосохранённый.xls ,1 курс .xls
+dell extra words in the end,1 курс.xls автосохранённый автосохранённый автосохранённый,1 курс.xls
+dell extra words in the middle,1 автосохранённый курс копия.xls,1 курс .xls
+dell word in brackets,1 курс (автосохранённый).xls,1 курс .xls
+dell some words in brackets,1 курс (автосохранённый) (копия).xls,1 курс .xls
+dell extra brackets,1 курс(   ).xls,1 курс.xls

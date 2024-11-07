@@ -29,3 +29,5 @@ duplicate numbers,"курс 1, 1, 1 ",[1]
 numbers on both sides with other words 1,год 2 курс 1,"[1, 2]"
 numbers on both sides with other words 2,2 курс 1 год,"[1, 2]"
 numbers on both sides but one is too large,год 2024 курс 1,[1]
+text with numbers right,курс МЛВ169с,[]
+similar value equal 0.8,2-5 курсов 24-25,"[2,3,4,5]"

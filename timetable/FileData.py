@@ -6,7 +6,7 @@ class FileData:
     Неизменяемый класс, который хранит все параметры нового файла
     """
     # Доверительное значение для определения параметров файла
-    _CONFIDENCE_VALUE = 0.85
+    _CONFIDENCE_VALUE = 0.8
 
     # Слова, которые встречаются в степени обучения
     _DEGREE_WORDS = [
@@ -44,7 +44,6 @@ class FileData:
         "вычислительная",
         "техника",
         "xимико-технологический",
-        "занятия",
         "иностранный",
         "вечерний",
         "технологический",
@@ -67,31 +66,51 @@ class FileData:
     # Символы, которые могут разделять наименования
     _SENTENCE_DELIMITERS = ["_", " ", "(", ")", ",", ".", '"']
 
-    def __init__(self, name:str, path:str, url:str):
+    def __init__(self, path:str, url:str, last_update):
         """
         Расчёт всех параметров для файла с параметрами
-        :param name: Имя файла (действительное)
         :param path: Путь к файлу (содержит имя файла, предложенное в иерархии)
         :param url: Ссылка для скачивания
+        :param last_update: Последнее время обновления
         """
-        self.__name = name # Имя файла
+
         self.__path = path # Путь по которому хранился файл на сайте
         self.__url = url # Ссылка для скачивания файла
+        self.__last_update = last_update # Время последнего обновления
+        self.__calc()
+
+    def get_path(self) -> str: return self.__path
+    def get_url(self) -> str: return self.__url
+    def get_last_update(self) -> str: return self.__last_update
 
     def __calc(self):
         """
         Рассчитывает все параметры для файла
         :return: Текущий экземпляр класса
         """
-        self.__name_from_path = self._get_file_name_from_path(self.__path)  # Имя файла из пути
+        self.__name_from_path = self.get_file_name_from_path(self.__path)  # Имя файла из пути
+        self.__correct_name_from_path = self.get_correct_file_name(self.__name_from_path)  # Корректное имя файла из пути
+
+        self.__name_from_url = self.get_file_name_from_path(self.__url) #Имя файла из ссылки
+        self.__correct_name_from_url = self.get_correct_file_name(self.__correct_name_from_path) # Корректное имя файла из url
+
         self.__degree = self._get_degree(self.__path)  # Степень обучения (бакалавриат, магистратура и другие)
         self.__education_form = self._get_education_form(self.__path)  # Форма обучения (очная, заочная и другие)
         self.__faculty = self._get_faculty(self.__path)  # Факультет обучения
         self.__course = self._get_course_list(self.__name_from_path) # Список курсов
-        self.__correct_name = self.get_correct_file_name(self.__name)  # Корректное имя файла
-        self.__correct_name_from_path = self.get_correct_file_name(self.__name_from_path)  # Корректное имя файла из пути
-        self.__correct_path = self.__get_correct_path(self.__path)  # Корректный путь к файлу
+
+        self.__correct_path = self.__calc_correct_path(self.__path)  # Корректный путь к файлу
         return self
+
+    def get_name_from_path(self) -> str: return self.__name_from_path
+    def get_correct_name_from_path(self) -> str: return self.__correct_name_from_path
+    def get_name_from_url(self) -> str: return self.__name_from_url
+    def get_correct_name_from_url(self) -> str: return self.__correct_name_from_url
+    def get_degree(self) -> str: return self.__degree
+    def get_education_form(self) -> str: return self.__education_form
+    def get_faculty(self) -> str: return self.__faculty
+    def get_course(self) -> str: return str(self.__course)
+    def get_correct_path(self) -> str: return self.__correct_path
 
     @classmethod
     def _get_degree(cls, path: str | list):
@@ -205,6 +224,7 @@ class FileData:
             mark_words_in_string = analyze.get_max_ratio_words()
 
             # Вернуть пустой список, если слово недостаточно похоже или ни одно слово не найдено
+            mxs = analyze.get_max_ratio()
             if analyze.get_max_ratio() < FileData._CONFIDENCE_VALUE or len(mark_words_in_string) == 0:
                 return []
 
@@ -297,7 +317,8 @@ class FileData:
             :param string: Строка
             :return: Результат проверки
             """
-            return re.search(r'\d+\s*-\s*\d+|\d+', string) is not None
+            val = re.search(r'\b(\d+\s*-\s*\d+|\d+)\b', string)
+            return re.search(r'\b(\d+\s*-\s*\d+|\d+)\b', string) is not None
 
         @staticmethod
         def __get_number_list(string_list:list[str]) -> list[int]:
@@ -326,7 +347,7 @@ class FileData:
             return sorted(numbers)
 
     @classmethod
-    def _get_file_name_from_path(cls, path: str):
+    def get_file_name_from_path(cls, path: str):
         """
         Вычисляет имя файла из пути. Путь представлен в виде классической строки "dir1/dir2/dir3/filename".
         Тип файла (расширение) отбрасывается.
@@ -366,7 +387,7 @@ class FileData:
 
             # Преобразование над строкой
             new_file_name = re.sub(r'-\s*$', '', new_file_name)
-            new_file_name = re.sub(r'(\s*)', "", new_file_name)
+            new_file_name = re.sub(r'\(\s*\)', "", new_file_name)
             new_file_name = cls.__remove_extra_spaces(new_file_name)
 
             # Выход из цикла, если строка не изменилась
@@ -376,7 +397,7 @@ class FileData:
         # Вернуть преобразованную строку
         return new_file_name
 
-    def __get_correct_path(self, path:str = "", number_of_first_directories:int = 0):
+    def __calc_correct_path(self, path:str = "", number_of_first_directories:int = 0):
         """
         Вычисляет корректный путь. Может добавить несколько первых директорий из заданного пути в корректный.
         Путь представлен в виде классической строки "dir1/dir2/dir3/filename".
@@ -421,7 +442,7 @@ class FileData:
         :param is_file: Элемент является файлом, символ '/' в конце строки не нужен
         :return: Дополненный путь
         """
-        if element != "":
+        if element != "" and element is not None:
             path += element
             if not is_file:
                 path += '/'
@@ -489,7 +510,7 @@ class FileData:
         :param string: Строка для поиска
         :return: Эвристическое значение
         """
-        analyzer = StringListAnalyzer(cls.split_string_by_delimiters(string.lower()), cls.faculty_words)
+        analyzer = StringListAnalyzer(cls.split_string_by_delimiters(string.lower()), cls._FACULTY_WORDS)
         return len(analyzer.get_strings_by_ratio_in_range(cls._CONFIDENCE_VALUE, 1))
 
     @classmethod
