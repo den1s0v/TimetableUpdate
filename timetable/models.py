@@ -1,44 +1,50 @@
 from django.db import models
 
-class Origin(models.Model):
-    metadata = models.JSONField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-    last_changed = models.DateTimeField(null=True, blank=True)
-    hashsum = models.CharField(max_length=255)
-    url = models.TextField(null=True, blank=True)
-    filename = models.CharField(max_length=255, null=True, blank=True)
-    mimetype = models.CharField(max_length=45, null=True, blank=True)
-    resource_id = models.IntegerField()
-    is_latest_version = models.BooleanField(default=True, help_text="является ли последней версией ресурса")
-
-    class Meta:
-        db_table = 'origin'
-        verbose_name = 'Информация об источнике ресурса'
-        verbose_name_plural = 'Информация об источниках ресурсов'
-
 
 class Resource(models.Model):
-    metadata = models.JSONField(null=True, blank=True)
-    path = models.CharField(max_length=255, null=True, blank=True)
-    name = models.CharField(max_length=255)
+    """
+    Таблица resource хранит основные сведения о ресурсе, такие как имя, путь и метаданные.
+    """
+    last_update = models.DateTimeField()  # Дата последнего обновления ресурса
+    name = models.CharField(max_length=255)  # Имя ресурса
+    path = models.CharField(max_length=255, null=True, blank=True)  # Путь к файлу
+    metadata = models.JSONField(null=True, blank=True)  # Дополнительные метаданные в формате JSON
 
     class Meta:
         db_table = 'resource'
-        verbose_name = 'Характеристики ресурса'
-        verbose_name_plural = 'Характеристики ресурсов'
+        verbose_name = 'Ресурс'
+        verbose_name_plural = 'Ресурсы'
+
+
+class FileVersion(models.Model):
+    """
+    Таблица file_version хранит версии файлов, относящиеся к определенному ресурсу.
+    """
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name="versions")  # Связь с ресурсом
+    mimetype = models.CharField(max_length=45, null=True, blank=True)  # MIME-тип файла
+    url = models.TextField(null=True, blank=True)  # URL-адрес файла
+    timestamp = models.DateTimeField(auto_now_add=True)  # Время добавления версии
+    last_changed = models.DateTimeField(null=True, blank=True)  # Дата последнего изменения
+    hashsum = models.CharField(max_length=255)  # Хэш-сумма файла
+
+    class Meta:
+        db_table = 'file_version'
+        verbose_name = 'Версия файла'
+        verbose_name_plural = 'Версии файлов'
 
 
 class Storage(models.Model):
-    metadata = models.JSONField()
-    source = models.ForeignKey(Origin, on_delete=models.CASCADE, related_name='storages')
-    resource_id = models.IntegerField()
-    last_changed = models.CharField(max_length=45, null=True, blank=True)
-    storage_type = models.CharField(max_length=127, help_text="Тип хранилища - локальная файловая система, облако")
-    path = models.CharField(max_length=255, null=True, blank=True, help_text="Путь к файлу внутри хранилища")
-    download_url = models.TextField(null=True, blank=True)
-    resource_url = models.TextField(null=True, blank=True)
+    """
+    Таблица storage хранит информацию о местоположении файла и его ссылках на скачивание.
+    """
+    file_version_id = models.ForeignKey(FileVersion, on_delete=models.CASCADE, related_name="storages")  # Связь с версией файла
+    storage_type = models.CharField(max_length=127)  # Тип хранилища, например, локально или облако
+    name = models.CharField(max_length=255)  # Имя ресурса
+    path = models.CharField(max_length=255, null=True, blank=True)  # Путь к файлу внутри хранилища
+    download_url = models.TextField(null=True, blank=True)  # Ссылка для скачивания файла
+    resource_url = models.TextField(null=True, blank=True)  # Прямая ссылка на ресурс в хранилище
 
     class Meta:
         db_table = 'storage'
-        verbose_name = 'Место хранения ресурса'
-        verbose_name_plural = 'Места хранения ресурсов'
+        verbose_name = 'Хранилище'
+        verbose_name_plural = 'Хранилища'
