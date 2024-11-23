@@ -2,28 +2,89 @@ from abc import ABC, abstractmethod
 
 import fs
 import fs.copy
+from coverage.files import actual_path
+from django.utils.timezone import override
 from fs.memoryfs import FS
+from pathlib import Path
+
+from lxml.doctestcompare import PARSE_HTML
 
 from timetable.models import Resource, FileVersion, Storage
 class StorageManager(ABC):
+    # ------------------КОНСТРУКТОРЫ------------------- #
     def __init__(self, storage_type:str, fs_root:FS):
-        self.fs_root = fs_root
-        self.storage_type = storage_type
+        """
+        Инициализация объектов, необходимых для работы файлового менеджера.
+        :param storage_type: Тип хранилища (описывается строкой).
+        :param fs_root: Корневая файловая система.
+        """
+        self._fs_root = fs_root
+        self.__storage_type = storage_type
 
-    def add_new_file_version(self, local_file_path:str, resource:Resource, file_version:FileVersion):
-        fs_local = fs.open_fs('osfs://')
-        # Проверить наличие предыдущих версий
-        previous_file_version = FileVersion.objects.filter(resource_id = file_version.resource).order_by('-last_changed').second()
-        if previous_file_version is not None:
-            # Перевести актуальную версию в архивную
-            self.__move_actual_file_version_to_archive(previous_file_version)
-            # Перезаписать файл с последней версией
-            self.__rewrite_file(fs_local, local_file_path, self.fs_root, self.__create_actual_file_path(resource, file_version))
+    # -----------------ОТКРЫТЫЕ МЕТОДЫ----------------- #
+    def add_new_file_version(self, local_file_path:Path|str, resource:Resource, file_version:FileVersion):
+        """
+        Добавляет новую версию файла в хранилище.
+        :param local_file_path: Путь к файлу в локальном хранилище.
+        :param resource: Запись базы данных с информацией о ресурсе, которому принадлежит этот файл.
+        :param file_version: Запись базы данных с информацией о версии файла, которой принадлежит этот файл.
+        """
+        # Приведения пути к заданному типу
+        local_file_path = Path(local_file_path)
+        if not local_file_path.is_file():
+            raise FileNotFoundError(str(local_file_path))
+
+        # Получить доступ к локальному хранилищу файлов
+        fs_local = fs.open_fs('osfs://'+str(local_file_path.parent))
+
+        # Получить список всех версий ресурса в порядке убывания
+        file_versions = FileVersion.objects.filter(resource = file_version.resource).order_by('-last_changed', '-timestamp')
+
+        # Определим относительный путь к актуальной версии файла
+        actual_file_path = self.__create_actual_file_path(resource, file_version)
+
+        # Если есть предыдущая версия
+        if file_versions is not None and len(file_versions) >= 2:
+            # Получить предыдущую версию
+            previous_file_version = file_versions[1]
+            # Перевести предыдущую версию (актуальную) в архивную
+            self.__make_file_version_is_archive(resource, previous_file_version)
+            # Перезаписать файл с актуальной версией
+            self.__rewrite_file(fs_local, str(local_file_path.name), self._fs_root, actual_file_path)
         else:
             # Создать новый файл актуальной версии
-            self.__copy_file(fs_local, local_file_path, self.fs_root, self.__create_actual_file_path(resource, file_version))
+            self.__copy_file(fs_local, str(local_file_path.name), self._fs_root, actual_file_path)
 
-    def __move_actual_file_version_to_archive(self, resource: Resource, file_version: FileVersion):
+        # Создать запись в базе данных с информацией об этом файле
+        new_storage = Storage()
+        new_storage.storage_type = self.__storage_type
+        new_storage.path = actual_file_path
+        new_storage = self._set_storage_link(actual_file_path, new_storage)
+        new_storage.file_version = file_version
+        new_storage.save()
+
+    # ----------------ПРИВАТНЫЕ МЕТОДЫ----------------- #
+    def _set_storage_link(self, file_dir:str, storage:Storage):
+        """
+        Задаёт ссылки для файла в запись базы данных.
+        :param file_dir: Путь к файлу
+        :param storage: Запись базы данных.
+        :return: Запись базы данных.
+        """
+        storage.resource_url = None
+        storage.download_url = None
+        return storage
+
+    def _make_file_public(self, file_system:FS, file_dir:str):
+        """
+        Делает файл публичным.
+        :param file_system: Файловая система.
+        :param file_dir: Путь к файлу.
+        """
+        pass
+
+    # -----------------ЗАКРЫТЫЕ МЕТОДЫ----------------- #
+    def __make_file_version_is_archive(self, resource: Resource, file_version: FileVersion):
         """
         Ищет последнюю версию ресурса. Создаёт архивный файл с информацией из последней версии. Обновляет запись в базе данных.
         :param resource: Запись базы данных с информацией о ресурсе.
@@ -31,7 +92,7 @@ class StorageManager(ABC):
         :return:
         """
         # Найти предыдущую версию, которая является актуальной
-        storage = Storage.objects.filter(storage_type=self.storage_type, file_version_id=file_version.id).first()
+        storage = Storage.objects.filter(storage_type=self.__storage_type, file_version=file_version).first()
         if storage is None:
             raise Exception("Storage does not exist")
 
@@ -40,13 +101,12 @@ class StorageManager(ABC):
         current_path = storage.path
 
         # Сохранить файл под новым названием
-        self.__copy_file(self.fs_root, current_path, self.fs_root, archive_path)
+        self.__copy_file(self._fs_root, current_path, self._fs_root, archive_path)
 
         # Обновить параметры записи базы данных
-        storage.name = self.__get_archive_file_name(resource, file_version)
-        storage = self._update_storage_link(archive_path, storage)
+        storage.path = self.__create_archive_file_path(resource, file_version)
+        storage = self._set_storage_link(archive_path, storage)
         storage.save()
-
 
     def __rewrite_file(self, fs_source:FS, source_file_path: str, fs_destination:FS, destination_file_path: str, chunk_size: int = 4096):
         """
@@ -58,23 +118,20 @@ class StorageManager(ABC):
         :param chunk_size: Размер буфера для чтения данных.
         """
         # Создаём пути к папкам
-        fs_source.makedirs(fs.path.dirname(source_file_path))
-        fs_destination.makedirs(fs.path.dirname(destination_file_path))
+        fs_destination.makedirs(fs.path.dirname(destination_file_path), recreate=True)
         # Открываем файлы и делаем перезапись
         with fs_source.open(source_file_path, 'rb') as source_file:
             with fs_destination.open(destination_file_path, 'wb') as target_file:
+                # Чтение части данных из исходного файла
+                chunk = source_file.read(chunk_size)
                 while chunk:
-                    # Чтение части данных из исходного файла
-                    chunk = source_file.read(chunk_size)
-                    # Проверка на окончание файла
-                    if not chunk:
-                        break
                     # Запись части данных в целевой файл
                     target_file.write(chunk)
+                    # Чтение части данных из исходного файла
+                    chunk = source_file.read(chunk_size)
         # Задаём файлам открытые права доступа
         self._make_file_public(fs_source, source_file_path)
         self._make_file_public(fs_destination, destination_file_path)
-
 
     def __copy_file(self, fs_source:FS, source_file_path: str, fs_destination:FS, destination_file_path: str):
         """
@@ -85,40 +142,59 @@ class StorageManager(ABC):
         :param destination_file_path: Путь к целевому файлу.
         """
         # Создаём путь к файлу
-        fs_destination.makedirs(fs.path.dirname(destination_file_path))
+        fs_destination.makedirs(fs.path.dirname(destination_file_path), recreate=True)
         # Копируем файл
         fs.copy.copy_file(fs_source, source_file_path, fs_destination, destination_file_path)
         # Задаём новому файлу открытые права доступа
         self._make_file_public(fs_destination, destination_file_path)
 
     def __create_actual_file_path(self, resource:Resource, file_version:FileVersion):
-        new_dir = self.__get_path(resource)
-        self.fs_root.makedirs(new_dir, recreate=True)
+        """
+        Создаёт путь к актуальному файлу на основании записей базы данных.
+        :param resource: Запись базы данных с информацией о ресурсе, которому принадлежит этот файл.
+        :param file_version: Запись базы данных с информацией о версии файла, которой принадлежит этот файл.
+        :return: Путь к файлу.
+        """
+        new_dir = self.__get_parent_dir_path(resource)
+        self._fs_root.makedirs(new_dir, recreate=True)
         return new_dir + '/' + self.__get_actual_file_path(resource, file_version)
 
     def __create_archive_file_path(self, resource:Resource, file_version:FileVersion):
-        new_dir = self.__get_path(resource)
-        self.fs_root.makedirs(new_dir, recreate=True)
+        """
+        Создаёт путь к архивному файлу на основании записей базы данных.
+        :param resource: Запись базы данных с информацией о ресурсе, которому принадлежит этот файл.
+        :param file_version: Запись базы данных с информацией о версии файла, которой принадлежит этот файл.
+        :return: Путь к файлу.
+        """
+        new_dir = self.__get_parent_dir_path(resource)
+        self._fs_root.makedirs(new_dir, recreate=True)
         return new_dir + '/' + self.__get_archive_file_name(resource, file_version)
 
     @classmethod
     def __get_actual_file_path(cls, resource:Resource, file_version:FileVersion):
+        """
+        Возвращает путь к актуальному файлу на основании записей базы данных.
+        :param resource: Запись базы данных с информацией о ресурсе, которому принадлежит этот файл.
+        :param file_version: Запись базы данных с информацией о версии файла, которой принадлежит этот файл.
+        :return: Путь.
+        """
         return resource.name + file_version.mimetype
 
     @classmethod
     def __get_archive_file_name(cls, resource:Resource, file_version:FileVersion):
-        return resource.name + file_version.last_changed.strftime('%Y%m%d%H%M%S') + file_version.mimetype
+        """
+        Возвращает путь к архивному файлу на основании записей базы данных.
+        :param resource: Запись базы данных с информацией о ресурсе, которому принадлежит этот файл.
+        :param file_version: Запись базы данных с информацией о версии файла, которой принадлежит этот файл.
+        :return: Путь.
+        """
+        return resource.name + " " + file_version.timestamp.strftime('%Y-%m-%d_%H-%M-%S') + file_version.mimetype
 
     @classmethod
-    def __get_path (cls, resource:Resource):
-        return f"{resource.path}/{resource.name}/"
-
-    @abstractmethod
-    def _update_storage_link(self, file_dir:str, storage:Storage):
-        storage.resource_url = None
-        storage.download_url = None
-        return storage
-
-    @abstractmethod
-    def _make_file_public(self, fs, file_dir:str):
-        pass
+    def __get_parent_dir_path (cls, resource:Resource):
+        """
+        Возвращает путь к родительской директории для файла.
+        :param resource:
+        :return:
+        """
+        return (Path(resource.path) / resource.name).as_posix()
