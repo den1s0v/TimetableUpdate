@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import fs
 import fs.copy
 from coverage.files import actual_path
+from django.core.files.storage import storages
 from django.utils.timezone import override
 from fs.memoryfs import FS
 from pathlib import Path
@@ -62,6 +63,72 @@ class StorageManager(ABC):
         new_storage = self._set_storage_link(actual_file_path, new_storage)
         new_storage.file_version = file_version
         new_storage.save()
+
+    def dell_storages_by_resource(self, resource:Resource, need_dell_file_versions = False):
+        """
+        Удаляет записи с информацией о файле в этом хранилище по ресурсу.
+        :param resource: Запись в базе данных содержащая информацию о ресурсе.
+        :param need_dell_file_versions: Определяет необходимость удалять записи в базе данных,
+        которые содержат информацию о версии файла, если те не имеют больше ссылок на файлы в хранилищах.
+        """
+        # Найти все версии файла
+        file_versions = FileVersion.objects.filter(resource = resource)
+
+        # Удалить файлы этого хранилища для всех версий файла этого ресурса
+        for file_version in file_versions:
+            # Удалить файлы
+            self.dell_storages_by_file_version(file_version)
+
+            # Удалить запись с информацией о версии файла, если это необходимо и можно сделать
+            if need_dell_file_versions:
+                storages = Storage.objects.filter(file_version = file_version)
+                if len(storages) == 0:
+                    file_version.delete()
+
+    def dell_storages_by_file_version(self, file_version:FileVersion):
+        """
+        Удаляет записи с информацией о файле в этом хранилище по версии файла.
+        :param file_version: Запись в базе данных содержащая информацию о версии файла.
+        """
+        # Найти все записи с информацией о ресурсе, которые принадлежат этому ресурсу и относятся к этой версии файла
+        storages = Storage.objects.filter(file_version = file_version, storage_type = self.__storage_type)
+
+        # Удалить файл для каждого хранилища и запись о нём в базе данных
+        for storage in storages:
+            self.dell_storages_by_file_version(storage)
+
+    def dell_file_by_storage(self, storage:Storage):
+        """
+        Удаляет запись с информацией о файле в этом хранилище.
+        :param storage: Запись в базе данных с информацией о файле на этом ресурсе.
+        """
+        # Завершить выполнение досрочно, если запись содержит информацию о файле не в этом хранилище.
+        if storage.storage_type != self.__storage_type:
+            return False
+
+        # Удалить файл, если он существует
+        if self._fs_root.exists(storage.path):
+            self._fs_root.remove(storage.path)
+
+        # Удалить запись о хранилище
+        storage.delete()
+        return True
+
+    def clear_storage(self):
+        """
+        Очищает всё хранилище, удаляет все записи о себе в базе данных.
+        """
+        # Удалить каждый объект в корневой папке
+        for path in self._fs_root.listdir("/"):
+            # Удалить путь, даже если в нём есть файлы
+            if Path(path).is_dir():
+                self._fs_root.removetree(path)
+            # Удалить файл
+            else:
+                self._fs_root.remove(path)
+
+        # Удалить все записи в базе данных о себе
+        self.__clear_storage_in_db()
 
     # ----------------ПРИВАТНЫЕ МЕТОДЫ----------------- #
     def _set_storage_link(self, file_dir:str, storage:Storage):
@@ -198,3 +265,11 @@ class StorageManager(ABC):
         :return:
         """
         return (Path(resource.path) / resource.name).as_posix()
+
+    def __clear_storage_in_db(self):
+        """
+        Удалить все записи, содержащие информацию об этом хранилище.
+        """
+        storages = Storage.objects.filter(storage_type = self.__storage_type)
+        for storage in storages:
+            storage.delete()
