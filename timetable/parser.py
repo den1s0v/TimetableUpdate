@@ -1,6 +1,8 @@
 import requests
+import logging
 from bs4 import BeautifulSoup
 import re
+from timetable.filedata import FileData
 
 
 class WebParser:
@@ -20,21 +22,8 @@ class WebParser:
         link: str = ""  # Ссылка на скачивание файла
         last_update: str = ""  # Время последнего обновления файла
 
-        def __init__(self, path, name, link, lastUpdate):
-            """
-            Заполняет информацию о файле
-            :param path: Путь к файлу
-            :param name: Имя файла
-            :param link: Ссылка на скачивание файла
-            :param lastUpdate: Время последнего обновления файла
-            """
-            self.path = path
-            self.name = name
-            self.link = link
-            self.last_update = lastUpdate
-
     @staticmethod
-    def get_files_from_webpage(web_link: str, current_path: str = ""):
+    def get_files_from_webpage(web_link: str, current_path: str = "") -> list[FileData]:
         """
         Ищет на странице и в её дочерних страницах все файлы
         :param web_link: Ссылка на страницу
@@ -48,6 +37,8 @@ class WebParser:
         try:
             content = WebParser.__get_page_content(web_link)
         except Exception as e:
+            logger = logging.getLogger(__name__)  # Получаем логгер для текущего модуля
+            logger.error("Error in get_files_from_webpage", e, exc_info=True)
             print(e)
             return files
 
@@ -81,8 +72,8 @@ class WebParser:
         # Возвращаем список всех файлов
         return files
 
-    @staticmethod
-    def __find_files_from_li(li, web_url, current_path):
+    @classmethod
+    def __find_files_from_li(cls, li, web_url, current_path):
         """
         Получает все файлы из элемента <li>
         :param li: Элемента <li>
@@ -99,20 +90,25 @@ class WebParser:
             link_url = requests.compat.urljoin(web_url, link_tag['href'])
 
             # Проверяем, что ссылка ведёт на файл
-            if WebParser.__is_file_with_extension(link_url, ['.xls', '.xlsx', '.doc', '.docx']):
+            if cls.is_file_with_extension(link_url, ['.xls', '.xlsx', '.doc', '.docx']):
+
+                # Добавляем новую директорию в путь
+                current_path = cls.__add_to_path(current_path, link_name, True)
+
                 # Извлекаем дату обновления, если она есть
-                last_update = WebParser.__get_update_time_from_text(li.text)
+                last_update = cls.__get_update_time_from_text(li.text)
 
                 # Создаем объект файла и добавляем в список
-                file_obj = WebParser.FileClass(current_path, WebParser.__get_file_name(link_url), link_url, last_update)
-                files.append(file_obj)
+                file_data = FileData(current_path, link_url, last_update)
+                print([current_path, link_url, last_update])
+                files.append(file_data)
 
             else:
                 # Добавляем новую директорию в путь
-                current_path = WebParser.__add_to_path(current_path, link_name)
+                current_path = cls.__add_to_path(current_path, link_name)
 
-                # Добавляем в список все файлы, которые только сможем найти на веб странице по этой ссылке
-                files += WebParser.get_files_from_webpage(link_url, current_path)
+                # Добавляем в список все файлы, которые сможем найти на веб странице по этой ссылке
+                files += cls.get_files_from_webpage(link_url, current_path)
 
         # Вернуть список файлов
         return files
@@ -182,7 +178,7 @@ class WebParser:
         return path
 
     @staticmethod
-    def __is_file_with_extension(file_path, extensions):
+    def is_file_with_extension(file_path, extensions):
         """
         Проверяет соответствие файла одному из расширений в списке
         :param file_path: Путь к файлу
@@ -194,15 +190,8 @@ class WebParser:
                 return True
         return False
 
-    @staticmethod
-    def __get_file_name(file_path: str):
-        """
-        Возвращает имя файла
-        :param file_path: Путь к файлу
-        :return: Имя файла
-        """
-        index = file_path.rfind('/') + 1
-        return file_path[index:]
+
+
 
 
 if __name__ == '__main__':
