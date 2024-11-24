@@ -1,10 +1,21 @@
+from pathlib import Path
+
+import requests
+import json
 import re
+from datetime import datetime
+from openpyxl import load_workbook
+import hashlib
 from timetable.stringlistanalyzer import StringListAnalyzer
+from timetable.models import Resource, FileVersion
+
 
 class FileData:
     """
     Неизменяемый класс, который хранит все параметры нового файла
     """
+    TEMP_DIR = r"C:\Users\Ilya\Documents\Файлы сервера\temp"
+
     # Доверительное значение для определения параметров файла
     _CONFIDENCE_VALUE = 0.8
 
@@ -66,6 +77,9 @@ class FileData:
     # Символы, которые могут разделять наименования
     _SENTENCE_DELIMITERS = ["_", " ", "(", ")", ",", ".", '"']
 
+    # Расширения экселевских таблицы
+    _EXCEL_EXTENSION = [".xls", ".xlsx"]
+
     def __init__(self, path:str, url:str, last_update):
         """
         Расчёт всех параметров для файла с параметрами
@@ -76,22 +90,26 @@ class FileData:
 
         self.__path = path # Путь по которому хранился файл на сайте
         self.__url = url # Ссылка для скачивания файла
-        self.__last_update = last_update # Время последнего обновления
+        self.__last_changed = last_update # Время последнего обновления
         self.__calc()
 
     def get_path(self) -> str: return self.__path
     def get_url(self) -> str: return self.__url
-    def get_last_update(self) -> str: return self.__last_update
+    def get_last_changed(self) -> str: return self.__last_changed
 
     def __calc(self):
         """
         Рассчитывает все параметры для файла
         :return: Текущий экземпляр класса
         """
-        self.__name_from_path = self.get_file_name_from_path(self.__path)  # Имя файла из пути
+        self.__name_from_path_with_mimetype = self.get_file_name_from_path(self.__path, dell_mimetype=False)  # Имя файла с расширением из пути
+        self.__name_from_path = self.get_file_name_from_path(self.__path)  # Имя файла с расширением из пути
+        self.__mimetype_from_path = self.__get_mimetype(self.__path) # Расширение файла из пути
         self.__correct_name_from_path = self.get_correct_file_name(self.__name_from_path)  # Корректное имя файла из пути
 
-        self.__name_from_url = self.get_file_name_from_path(self.__url) #Имя файла из ссылки
+        self.__name_from_url_with_mimetype = self.get_file_name_from_path(self.__url, dell_mimetype=False) # Имя файла с расширением из ссылки
+        self.__name_from_url = self.get_file_name_from_path(self.__url) # Имя файла из ссылки
+        self.__mimetype_from_url = self.__get_mimetype(self.__path) # Расширение файла из ссылки
         self.__correct_name_from_url = self.get_correct_file_name(self.__correct_name_from_path) # Корректное имя файла из url
 
         self.__degree = self._get_degree(self.__path)  # Степень обучения (бакалавриат, магистратура и другие)
@@ -100,16 +118,23 @@ class FileData:
         self.__course = self._get_course_list(self.__name_from_path) # Список курсов
 
         self.__correct_path = self.__calc_correct_path(self.__path)  # Корректный путь к файлу
+        self.__hash = None
+
         return self
+
+    def get_name(self): return self.__name_from_path
+    def get_mimetype(self): return self.__mimetype_from_url
+    def get_file_name(self): return self.__name_from_url_with_mimetype
+
+    def get_degree(self) -> str: return self.__degree
+    def get_education_form(self) -> str: return self.__education_form
+    def get_faculty(self) -> str: return self.__faculty
+    def get_course(self) -> str: return str(self.__course)
 
     def get_name_from_path(self) -> str: return self.__name_from_path
     def get_correct_name_from_path(self) -> str: return self.__correct_name_from_path
     def get_name_from_url(self) -> str: return self.__name_from_url
     def get_correct_name_from_url(self) -> str: return self.__correct_name_from_url
-    def get_degree(self) -> str: return self.__degree
-    def get_education_form(self) -> str: return self.__education_form
-    def get_faculty(self) -> str: return self.__faculty
-    def get_course(self) -> str: return str(self.__course)
     def get_correct_path(self) -> str: return self.__correct_path
 
     @classmethod
@@ -347,21 +372,32 @@ class FileData:
             return sorted(numbers)
 
     @classmethod
-    def get_file_name_from_path(cls, path: str):
+    def get_file_name_from_path(cls, path: str, dell_mimetype:bool = True):
         """
         Вычисляет имя файла из пути. Путь представлен в виде классической строки "dir1/dir2/dir3/filename".
-        Тип файла (расширение) отбрасывается.
         :param path: Путь к файлу
+        :param dell_mimetype: Удалить расширение из имени
         :return: Имя файла
         """
         # Получить имя файла с его расширением
-        file = path.split('/')[-1]
+        file_name = path.split('/')[-1]
 
-        # Удалить расширение файла
-        file_name = re.sub(r'\.[А-ЯЁA-Zа-яёa-z]*$', "", file)
+        # Удалить расширение файла, если это необходимо
+        if dell_mimetype:
+            file_name = re.sub(r'\.[А-ЯЁA-Zа-яёa-z]*$', "", file_name)
 
         # Вернуть имя файла
         return file_name
+
+    @classmethod
+    def __get_mimetype(cls, name:str) -> str:
+        """
+        Получает mimetype из имени файла.
+        :param name: Имя файла
+        :return: mimetype
+        """
+        # Вернуть имя файла
+        return name.split('.')[-1]
 
     @classmethod
     def get_correct_file_name(cls, file_name):
@@ -530,3 +566,116 @@ class FileData:
 
         # Разделяем строку по заданному шаблону
         return re.split(regex_pattern, string)
+
+    def get_json(self):
+        """
+        Создаёт json файл с параметрами ресурса
+        :return:
+        """
+        json_data = {
+            "degree": self.get_degree(),
+            "education_form": self.get_education_form(),
+            "faculty": self.get_faculty(),
+            "course": self.get_course()
+        }
+        return json.dumps(json_data, indent=4)
+
+    def get_resource(self):
+        """
+        Возвращает новую запись ресурса для базы данных.
+        :return: Модель записи базы данных
+        """
+        new_resource = Resource()
+        new_resource.path = self.get_correct_path()
+        new_resource.name = self.get_name()
+        new_resource.metadata = self.get_json()
+        return new_resource
+
+    def get_file_version(self, file_path:Path|str, resource_id:int = None):
+        """
+        Возвращает новую запись версии файла для базы данных.
+        :param file_path: Путь к файлу, для которой создаётся запись
+        :param resource_id: ID ресурса, к которому привязан файл
+        :return: Модель записи базы данных
+        """
+        # Приводим тип к нужному типу
+        file_path = Path(file_path)
+        if not file_path.is_file():
+            raise FileNotFoundError
+
+        # Создаём новый объект базы данных
+        new_file_version = FileVersion()
+
+        #Добавить ID ресурса, если он есть
+        if resource_id is not None:
+            new_file_version.resource = resource_id
+
+        # Добавить остальные параметры
+        new_file_version.mimetype = file_path.suffix # Добавить расширение файла
+        new_file_version.last_changed = datetime.strptime(self.get_last_changed(), "%Y-%m-%d %H:%M:%S") # Добавить время обновления, указанное на сайте
+        new_file_version.url = self.get_url() # Добавить ссылку на скачивание
+        new_file_version.hashsum = self.__get_file_hash(file_path) # Добавляет hash сумму файла
+
+        # Вернуть запись
+        return new_file_version
+
+    @classmethod
+    def __get_file_hash(cls, file_path:Path):
+        suffix = file_path.suffix
+        if suffix in cls._EXCEL_EXTENSION:
+            print(suffix)
+            return cls.__get_excel_file_hash(file_path)
+        else:
+            return cls.__get_bin_file_hash(file_path)
+
+    @staticmethod
+    def __get_excel_file_hash(file_path:Path):
+        wb = load_workbook(str(file_path), data_only=True)
+        data = []
+        for sheet in wb.worksheets:
+            for row in sheet.iter_rows(values_only=True):
+                data.append(tuple(row))  # Собираем данные
+        return hashlib.sha256(str(data).encode('utf-8')).hexdigest()
+
+    @staticmethod
+    def __get_bin_file_hash(file_path:Path):
+        # Инициализация SHA-256
+        sha256_hash = hashlib.sha256()
+
+        # Открываем файл в режиме чтения байтов
+        with file_path.open("rb") as f:
+            # Читаем файл поблочно для экономии памяти
+            for chunk in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(chunk)
+
+        # Возвращаем хэш файла в виде строки
+        return sha256_hash.hexdigest()
+
+    def download_file(self, dir: Path | str, chunk_size: int = 8192):
+        """
+        Скачивает файл по ссылке и сохраняет его по заданному пути
+        :param dir: Путь для сохранения файла
+        :param chunk_size: размер чанка для сохранения
+        :return: Путь по которому сохранён файл
+        """
+        # Попытаться скачать файл
+        download_file = requests.get(self.get_url())
+
+        # Выбросить исключение если файл не был скачан успешно
+        if download_file.status_code != 200:
+            raise Exception(f"File download error. URL: {self.get_url()}")
+
+        dir = Path(dir)
+        # Создаём путь к папке
+        dir.mkdir(parents=True, exist_ok=True)
+
+        # Создать путь к файлу
+        file_path = dir / self.get_file_name()
+
+        # Сохранить файл
+        with file_path.open('wb') as file:
+            for chunk in download_file.iter_content(chunk_size=chunk_size):
+                file.write(chunk)
+
+        # Вернуть путь
+        return file_path
