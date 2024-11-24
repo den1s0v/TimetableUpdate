@@ -121,7 +121,7 @@ class StorageManager(ABC):
         # Удалить каждый объект в корневой папке
         for path in self._fs_root.listdir("/"):
             # Удалить путь, даже если в нём есть файлы
-            if Path(path).is_dir():
+            if self._fs_root.isdir(path):
                 self._fs_root.removetree(path)
             # Удалить файл
             else:
