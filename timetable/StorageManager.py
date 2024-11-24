@@ -130,6 +130,9 @@ class StorageManager(ABC):
         # Удалить все записи в базе данных о себе
         self.__clear_storage_in_db()
 
+    def get_storage_type(self):
+        return self.__storage_type
+
     # ----------------ПРИВАТНЫЕ МЕТОДЫ----------------- #
     def _set_storage_link(self, file_dir:str, storage:Storage):
         """
