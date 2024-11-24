@@ -38,8 +38,8 @@ class StorageManagerGoogleDrive (StorageManager):
         return storage
 
     def _make_file_public(self, file_system, file_dir:str):
-        # Закончить выполнение, если файловая система не является
-        if not instance_of(file_system, GoogleDriveFS):
+        # Закончить выполнение, если файловая система не является файловой системой ресурса
+        if file_system != self._fs_root:
             return
 
         # Получить ID файла
