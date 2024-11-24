@@ -8,7 +8,7 @@ class StringListAnalyzer:
     строка из списка для сравнения. Также между этими строками вычисляется коэффициент сравнения.
     """
 
-    def __init__(self, analyze_strings:list = None, compare_strings:list = None):
+    def __init__(self, analyze_strings:list[str] = None, compare_strings:list[str] = None, quick_analyze:bool = True):
         """
         Выполняет сравнение двух списков строк
         :param analyze_strings: Список строк для анализа
@@ -19,18 +19,19 @@ class StringListAnalyzer:
         self.__compare_strings = [] # Список строк для сравнения
         self.__most_similar_strings = dict() # Словарь (строка) -> (максимально похожая строка)
         self.__max_ratio_strings = dict() # Словарь (строка) -> (степень максимальной похожести)
+        self.__quick_analyze = quick_analyze # Использовать быстрый анализ
 
         # Задание значений спискам
         if analyze_strings is not None:
-            self.set_analyze_strings(analyze_strings)
+            self.__analyze_strings = analyze_strings
         if compare_strings is not None:
-            self.set_compare_strings(compare_strings)
+            self.__compare_strings = compare_strings
 
         # Вызов метода анализа двух наборов строк
         if analyze_strings is not None and compare_strings is not None:
-            self.analyze()
+            self.__analyze()
 
-    def analyze(self):
+    def __analyze(self):
         """
         Выполняет сравнение двух списков строк
         :return: Текущий экземпляр класса
@@ -39,10 +40,13 @@ class StringListAnalyzer:
         for analyze_string in self.__analyze_strings:
             for compare_string in self.__compare_strings:
                 # Рассчитать коэффициент похожести
-                ratio = difflib.SequenceMatcher(None, analyze_string, compare_string).ratio()
+                if (self.__quick_analyze):
+                    ratio = difflib.SequenceMatcher(None, analyze_string, compare_string).quick_ratio()
+                else:
+                    ratio = difflib.SequenceMatcher(None, analyze_string, compare_string).ratio()
 
                 # Обновить значения, если текущий коэффициент больше предыдущего
-                if ratio > self.__max_ratio_strings.get(analyze_string, 0):
+                if ratio > self.__max_ratio_strings.get(analyze_string, -1):
                     self.__max_ratio_strings[analyze_string] = ratio
                     self.__most_similar_strings[analyze_string] = compare_string
 
@@ -66,14 +70,14 @@ class StringListAnalyzer:
 
     def get_similar_string(self, string:str):
         """
-        Возвращает максимально похожую строку из списка для сравнения
+        Возвращает максимально похожую строку из списка для сравнения.
         :param string: Строка из списка для анализа, для которой ищется максимально похожая строка
         :return: Строка из списка для сравнения
         """
         # Вернуть результат
         return self.__most_similar_strings.get(string, "")
 
-    def get_max_compare_ratio_for_string(self, string:str):
+    def get_ratio_for_string(self, string:str):
         """
         Возвращает максимальную степень похожести для строки из списка для анализа
         :param string: Строка из списка для анализа, для которой ищется максимальная степень похожести
@@ -100,12 +104,13 @@ class StringListAnalyzer:
         :param round_number: Количество знаков после запятой для округления (опционально)
         :return: Список символов
         """
-        # Выбросить исключение, если значение округления не соответствует допустимому
-        if round_number is not None and round_number < 0:
-            raise Exception(f"Round number must be greater than zero. Now round number = {round_number}.")
-        # Иначе убедится в степени округления коэффициента похожести
-        else:
-            ratio = round(ratio, round_number)
+        if round_number is not None:
+            # Выбросить исключение, если значение округления не соответствует допустимому
+            if round_number < 0:
+                raise Exception(f"Round number must be greater than zero. Now round number = {round_number}.")
+            # Иначе убедится в степени округления коэффициента похожести
+            else:
+                ratio = round(ratio, round_number)
 
         # Список строк
         result_strings = []
@@ -150,4 +155,8 @@ class StringListAnalyzer:
         :return: Максимальная степень похожести
         """
         # Вернуть значение
-        return max(self.__max_ratio_strings.keys())
+        values = self.__max_ratio_strings.values()
+        if len(values) == 0:
+            return 0
+        else:
+            return max(values)
