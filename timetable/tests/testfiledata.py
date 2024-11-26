@@ -48,7 +48,7 @@ class TestGetFileNameFromPath:
 
     @pytest.mark.parametrize("path, expected_file_name", test_data, ids=test_name)
     def test(self, path, expected_file_name):
-        file_name = FileData._get_file_name_from_path(path)
+        file_name = FileData.get_file_name_from_path(path)
         assert file_name == expected_file_name
 
 class TestGetDegree:
@@ -77,3 +77,11 @@ class TestGetCourse:
     def test(self, name, expected_list):
         actual_list = FileData._get_course_list(name)
         assert actual_list == expected_list
+
+class TestGetCorrectFileName:
+    test_data, test_name = load_csv_data('CSVFiles/FileData/test_get_correct_file_name.csv', [1, 2], 0)
+
+    @pytest.mark.parametrize("name, expected_name", test_data, ids=test_name)
+    def test(self, name, expected_name):
+        file_name = FileData.get_correct_file_name(name)
+        assert file_name == expected_name
