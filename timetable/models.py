@@ -10,6 +10,12 @@ class Resource(models.Model):
     name = models.CharField(max_length=255, verbose_name="Имя ресурса")  # Имя ресурса
     path = models.TextField(null=True, blank=True, default=None, verbose_name="Путь к ресурсу")  # Путь
     metadata = models.JSONField(null=True, blank=True, default=None, verbose_name="Метаданные")  # JSON-данные
+    tags = models.ManyToManyField(
+        'Tag',
+        related_name='resources',
+        blank=True,
+        verbose_name="Теги"
+    )
 
     class Meta:
         db_table = 'resource'
@@ -65,3 +71,19 @@ class Storage(models.Model):
         verbose_name = 'Хранилище'
         verbose_name_plural = 'Хранилища'
         app_label = 'timetable'
+class Tag(models.Model):
+    """
+    Таблица tag хранит информацию о тегах, которые могут быть связаны с ресурсами.
+    """
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=200, verbose_name="Название тега")
+    category = models.CharField(max_length=200, verbose_name="Название категории тега")
+
+    class Meta:
+        db_table = 'tag'
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        app_label = 'timetable'
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'category'], name='unique_name_category')
+        ]
