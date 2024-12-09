@@ -8,7 +8,7 @@ class Resource(models.Model):
     id = models.BigAutoField(primary_key=True)
     last_update = models.DateTimeField(auto_now=True, verbose_name="Дата последнего обновления")  # Автоматическое обновление времени
     name = models.CharField(max_length=255, verbose_name="Имя ресурса")  # Имя ресурса
-    path = models.CharField(max_length=255, null=True, blank=True, default=None, verbose_name="Путь к ресурсу")  # Путь
+    path = models.TextField(null=True, blank=True, default=None, verbose_name="Путь к ресурсу")  # Путь
     metadata = models.JSONField(null=True, blank=True, default=None, verbose_name="Метаданные")  # JSON-данные
 
     class Meta:
@@ -56,7 +56,7 @@ class Storage(models.Model):
         verbose_name="Связанная версия файла"
     )
     storage_type = models.CharField(max_length=127, verbose_name="Тип хранилища")  # Тип хранилища
-    path = models.CharField(max_length=255, null=True, blank=True, default=None, verbose_name="Путь к файлу")  # Путь
+    path = models.TextField(null=True, blank=True, default=None, verbose_name="Путь к файлу")  # Путь
     download_url = models.TextField(null=True, blank=True, default=None, verbose_name="Ссылка для скачивания")  # Скачивание
     resource_url = models.TextField(null=True, blank=True, default=None, verbose_name="Ссылка на ресурс")  # Прямая ссылка
 
