@@ -4,14 +4,12 @@ import random
 import subprocess
 import os
 
-from timetable.filedata import FileData
+from myproject.settings import TEMP_DIR, LIBREOFFICE_EXE
 from timetable.StorageManager import StorageManager
 from timetable.models import Resource, FileVersion, Storage
 from timetable.parser import WebParser
 
 class FileManager:
-    LIBREOFFICE_EXE_PATH = "C:\\Program Files\\LibreOffice\\program\\soffice.exe"
-    TEMP_DIR = r"C:\Users\Ilya\Documents\Файлы сервера\temp"
     TIMETABLE_START_PATH = "Расписания/Расписание занятий/"
     TIMETABLE_LINK = "https://www.vstu.ru/student/raspisaniya/zanyatiy/"
     MIN_SEC_DELAY_UPDATE = 5
@@ -19,7 +17,7 @@ class FileManager:
 
     def __init__(self):
         # Задать новую директорию временных файлов
-        os.environ["TMPDIR"] = self.TEMP_DIR
+        os.environ["TMPDIR"] = str(TEMP_DIR)
         # Создать контейнер для хранилищ
         self.__storages = []
 
@@ -43,7 +41,7 @@ class FileManager:
             print("path:", file_data.get_path(), "name:", file_data.get_name())
 
             # Скачать файл
-            file_path = file_data.download_file(self.TEMP_DIR)
+            file_path = file_data.download_file(TEMP_DIR)
             # Конвертировать xls файл в xlsx файл, если это возможно
             file_path = self.convert_xls_to_xlsx(file_path)
 
@@ -103,7 +101,7 @@ class FileManager:
         # Сохранение данных в формате .xlsx
 
         result = subprocess.run([
-            cls.LIBREOFFICE_EXE_PATH,
+            LIBREOFFICE_EXE,
             "--headless",  # Без графического интерфейса
             "--convert-to", "xlsx",
             "--outdir", str(xlsx_file_path.parent),
