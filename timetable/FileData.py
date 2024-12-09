@@ -612,7 +612,12 @@ class FileData:
 
         # Добавить остальные параметры
         new_file_version.mimetype = file_path.suffix # Добавить расширение файла
-        new_file_version.last_changed = datetime.strptime(self.get_last_changed(), "%Y-%m-%d %H:%M:%S") # Добавить время обновления, указанное на сайте
+        # Добавить время обновления, указанное на сайте
+        try:
+            new_file_version.last_changed = datetime.strptime(self.get_last_changed(), "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            # Вернуть текущее время, если не получилось распарсить время с сайта
+            new_file_version.last_changed = datetime.now()
         new_file_version.url = self.get_url() # Добавить ссылку на скачивание
         new_file_version.hashsum = self.__get_file_hash(file_path) # Добавляет hash сумму файла
 
