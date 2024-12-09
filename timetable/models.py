@@ -23,6 +23,9 @@ class Resource(models.Model):
         verbose_name_plural = 'Ресурсы'
         app_label = 'timetable'
 
+    def __str__(self):
+        return f"{self.name} ({self.path})"
+
 
 class FileVersion(models.Model):
     """
@@ -48,6 +51,8 @@ class FileVersion(models.Model):
         verbose_name_plural = 'Версии файлов'
         app_label = 'timetable'
 
+    def __str__(self):
+        return f"{self.url} ({self.last_changed} | {self.timestamp}) hash {self.hashsum}"
 
 class Storage(models.Model):
     """
@@ -71,6 +76,10 @@ class Storage(models.Model):
         verbose_name = 'Хранилище'
         verbose_name_plural = 'Хранилища'
         app_label = 'timetable'
+
+    def __str__(self):
+        return f"{self.path} ({self.storage_type})"
+
 class Tag(models.Model):
     """
     Таблица tag хранит информацию о тегах, которые могут быть связаны с ресурсами.
@@ -87,3 +96,7 @@ class Tag(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['name', 'category'], name='unique_name_category')
         ]
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
