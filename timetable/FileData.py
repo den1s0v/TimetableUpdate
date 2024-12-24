@@ -1,4 +1,5 @@
 from pathlib import Path
+from unicodedata import category
 
 import requests
 import json
@@ -7,7 +8,7 @@ from datetime import datetime
 from openpyxl import load_workbook
 import hashlib
 from timetable.stringlistanalyzer import StringListAnalyzer
-from timetable.models import Resource, FileVersion
+from timetable.models import Resource, FileVersion, Tag
 
 
 class FileData:
@@ -128,7 +129,7 @@ class FileData:
     def get_degree(self) -> str: return self.__degree
     def get_education_form(self) -> str: return self.__education_form
     def get_faculty(self) -> str: return self.__faculty
-    def get_course(self) -> str: return str(self.__course)
+    def get_course(self) -> str: return str(", ".join(map(str, self.__course)))
 
     def get_name_from_path(self) -> str: return self.__name_from_path
     def get_correct_name_from_path(self) -> str: return self.__correct_name_from_path
@@ -569,6 +570,7 @@ class FileData:
     def get_json(self):
         """
         Создаёт json файл с параметрами ресурса
+        TODO: Расшифровать поля в json файле
         :return:
         """
         json_data = {
@@ -579,6 +581,14 @@ class FileData:
         }
         return json.dumps(json_data, indent=4)
 
+    def get_tags(self):
+        l = []
+        l.append(Tag(name = self.get_degree(), category = "degree"))
+        l.append(Tag(name = self.get_education_form(), category = "education_form"))
+        l.append(Tag(name = self.get_faculty(), category = "faculty"))
+        l.append(Tag(name = self.get_course(), category = "course"))
+        return l
+
     def get_resource(self):
         """
         Возвращает новую запись ресурса для базы данных.
@@ -588,6 +598,7 @@ class FileData:
         new_resource.path = self.get_correct_path()
         new_resource.name = self.get_name()
         new_resource.metadata = self.get_json()
+        new_resource.add_tags(*self.get_tags())
         return new_resource
 
     def get_file_version(self, file_path:Path|str, resource_id:int = None):
