@@ -6,7 +6,7 @@ import os
 
 from myproject.settings import TEMP_DIR, LIBREOFFICE_EXE
 from timetable.StorageManager import StorageManager
-from timetable.models import Resource, FileVersion, Storage
+from timetable.models import Resource, FileVersion, Storage, Tag
 from timetable.parser import WebParser
 
 class FileManager:
@@ -61,8 +61,14 @@ class FileManager:
                 # Загрузить файл во все доступные хранилища
                 self.save_file_to_storages(file_path, resource, file_version)
             else:
+                # Обновить список тегов
+                tags = [Tag.objects.get_or_create(name=tag.name, category=tag.category)[0] for tag in resource.get_not_saved_tags()]
+                print(tags)
+                resource_from_db.tags.set(tags)
+
                 # Выбрать уже существующий ресурс
                 resource = resource_from_db
+
 
                 # Найти последнюю запись с информацией о версии файла
                 file_version_from_db = FileVersion.objects.filter(resource=resource).order_by('-last_changed',  '-timestamp').first()
