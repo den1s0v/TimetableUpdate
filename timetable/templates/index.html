@@ -1,20 +1,21 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <link rel="icon" href="icon.png" type="image/x-icon">
+  <link rel="icon" href="{% static 'public/icon.png' %}" type="image/x-icon">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Расписания</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="src/main.js"></script>
-
+  <link rel="stylesheet" href="{% static 'public/style.css' %}">
+  <script src="{% static 'src/main.js' %}"></script>
 </head>
+
 <body>
 
 <!-- Заголовок -->
 <header onclick="scrollToTop()">
   <div class="header-content">
-    <img src="Logo_vstu_rus.png" alt="Логотип ВУЗа" class="logo">
+    <img src="{% static 'public/Logo_vstu_rus.png' %}" alt="Логотип ВУЗа" class="logo">
     <h1 class="title">Расписания</h1>
   </div>
 </header>
@@ -29,56 +30,61 @@
 <main>
   <div class="schedule-grid">
     <!-- Карточка расписания занятий -->
-    <a href="schedule_study_degree.html" class="card">
+    <a href="choose_degree" class="card">
       <h2 class="card-title">Расписание занятий</h2>
       <div class="separator-line"></div>
-      <img src="/public/schedule-icon.png" alt="Расписание занятий" class="card-image">
+      <img src="{% static 'public/schedule-icon.png' %}" alt="Расписание занятий" class="card-image">
     </a>
 
     <!-- Пример других карточек -->
     <a href="bells.html" class="card">
       <h2 class="card-title">Расписание звонков</h2>
       <div class="separator-line"></div>
-      <img src="/public/bells-icon.png" alt="Расписание звонков" class="card-image">
+      <img src="{% static 'public/bells-icon.png' %}" alt="Расписание звонков" class="card-image">
     </a>
 
     <!-- Кликабельная карточка расписания учебно-тренировочных занятий -->
     <a href="sports-schedule.html" class="card">
       <h2 class="card-title">Расписание учебно-тренировочных занятий в спортивных отделениях</h2>
       <div class="separator-line"></div>
-      <img src="/public/sports-icon.png" alt="Расписание учебно-тренировочных занятий в спортивных отделениях" class="card-image">
+      <img src="{% static 'public/sports-icon.png' %}" alt="Расписание учебно-тренировочных занятий в спортивных отделениях" class="card-image">
     </a>
 
     <!-- Кликабельная карточка расписания экзаменов -->
     <a href="exams-schedule.html" class="card">
       <h2 class="card-title">Расписание экзаменов</h2>
       <div class="separator-line"></div>
-      <img src="/public/exams-icon.png" alt="Расписание экзаменов" class="card-image">
+      <img src="{% static 'public/exams-icon.png' %}" alt="Расписание экзаменов" class="card-image">
     </a>
 
     <!-- Кликабельная карточка календарного графика учебного процесса -->
     <a href="academic-calendar.html" class="card">
       <h2 class="card-title">Календарный график учебного процесс</h2>
       <div class="separator-line"></div>
-      <img src="/public/calendar-icon.png" alt="Календарный график учебного процесс" class="card-image">
+      <img src="{% static 'public/calendar-icon.png' %}" alt="Календарный график учебного процесса" class="card-image">
     </a>
 
     <!-- Кликабельная карточка графика консультаций и защит -->
     <a href="consultations.html" class="card">
       <h2 class="card-title">График консультаций и защит</h2>
       <div class="separator-line"></div>
-      <img src="/public/consultations-icon.png" alt="График консультаций и защит" class="card-image">
+      <img src="{% static 'public/consultations-icon.png' %}" alt="График консультаций и защит" class="card-image">
     </a>
 
     <!-- Кликабельная карточка цифровой кафедры -->
     <a href="digital-department.html" class="card">
       <h2 class="card-title">Цифровая кафедра</h2>
       <div class="separator-line"></div>
-      <img src="/public/digital-icon.png" alt="Цифровая кафедра" class="card-image">
+      <img src="{% static 'public/digital-icon.png' %}" alt="Цифровая кафедра" class="card-image">
     </a>
-
   </div>
-</main>
 
+  <!-- Кнопка прокрутки вверх -->
+  <div id="scrollToTop" class="scroll-to-top">
+    <img src="{% static 'public/arrow-up-icon.png' %}" alt="Вверх">
+  </div>
+
+</main>
 </body>
+
 </html>
