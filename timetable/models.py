@@ -1,10 +1,34 @@
 from django.db import models
 
 
+class Tag(models.Model):
+    """
+    Таблица tag хранит информацию о тегах, которые могут быть связаны с ресурсами.
+    """
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=200, verbose_name="Название тега")
+    category = models.CharField(max_length=200, verbose_name="Название категории тега")
+
+    class Meta:
+        db_table = 'tag'
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        app_label = 'timetable'
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'category'], name='unique_name_category')
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
 class Resource(models.Model):
     """
     Таблица resource хранит основные сведения о ресурсе, такие как имя, путь и метаданные.
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._not_save_tags = list()
+
     id = models.BigAutoField(primary_key=True)
     last_update = models.DateTimeField(auto_now=True, verbose_name="Дата последнего обновления")  # Автоматическое обновление времени
     name = models.CharField(max_length=255, verbose_name="Имя ресурса")  # Имя ресурса
@@ -16,6 +40,29 @@ class Resource(models.Model):
         blank=True,
         verbose_name="Теги"
     )
+
+    def add_tags(self, *args):
+        for tag in args:
+            exists = Tag.objects.filter(id=tag.id).exists()
+            if exists:
+                self.tags.add(tag)
+            else:
+                self._not_save_tags.append(tag)
+
+    def save(self, *args, **kwargs):
+        # Сохраняем элемент в базе данных
+        super().save(*args, **kwargs)
+        self.save_tags()
+
+    def save_tags(self):
+        # Сохраняем в него не сохранённые теги
+        for tag in self._not_save_tags:
+            saved_tag = Tag.objects.get_or_create(name=tag.name, category=tag.category)[0]
+            self.tags.add(saved_tag)
+        self._not_save_tags.clear()
+
+    def get_not_saved_tags(self):
+        return self._not_save_tags
 
     class Meta:
         db_table = 'resource'
@@ -80,23 +127,4 @@ class Storage(models.Model):
     def __str__(self):
         return f"{self.path} ({self.storage_type})"
 
-class Tag(models.Model):
-    """
-    Таблица tag хранит информацию о тегах, которые могут быть связаны с ресурсами.
-    """
-    id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=200, verbose_name="Название тега")
-    category = models.CharField(max_length=200, verbose_name="Название категории тега")
-
-    class Meta:
-        db_table = 'tag'
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-        app_label = 'timetable'
-        constraints = [
-            models.UniqueConstraint(fields=['name', 'category'], name='unique_name_category')
-        ]
-
-    def __str__(self):
-        return f"{self.name} ({self.category})"
 
