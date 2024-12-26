@@ -1,3 +1,4 @@
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import render
 
 # Create your views here.
@@ -31,3 +32,30 @@ def choose_degree(request):
         },
     ]
     return render(request, 'choose_degree.html', {'degrees': degrees})
+
+def timetable_list(request):
+    first_select_items = [
+        'Очная',
+        'Очно-заочная форма',
+        'Заочная'
+    ]
+    return render(request, 'timetable_list.html', {'first_select_items': first_select_items})
+
+def timetable_params(request):
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+    tags = dict(request.GET)
+    for key, value in tags.items():
+        print(key, value)
+
+    answer = {
+        "result" : "selector",
+        "selector_name" : "Факультет",
+        "selector_description" : "Выбрать факультет",
+        "selector_items" : [
+            "ФЭВТ",
+            "ХТФ",
+            "ФАСТИВ"
+        ]
+    }
+    return JsonResponse(answer)
