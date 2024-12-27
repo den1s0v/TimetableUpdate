@@ -1,12 +1,11 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <link rel="icon" href="icon.png" type="image/x-icon">
+    <link rel="icon" href="{% static 'image/icon.png' %}" type="image/x-icon">
     <meta charset="UTF-8">
     <title>Расписания занятий для бакалавриата (специалитета)</title>
-    <link rel="stylesheet" href="{% static 'public/style.css' %}">
+    <link rel="stylesheet" href="{% static 'style/style.css' %}">
     <script src="{% static 'src/timetable_list.js' %}"></script>
 </head>
 
@@ -21,7 +20,7 @@
 <header onclick="scrollToTop()">
     <div class="header-content">
         <a href="index.html">
-            <img src="Logo_vstu_rus.png" alt="Логотип ВУЗа" class="logo">
+            <img src="{% static 'image/Logo_vstu_rus.png' %}" alt="Логотип ВУЗа" class="logo">
         </a>
         <h1 class="title" id="scheduleTitle">Расписания занятий на <span id="semester"></span> семестр <span id="yearRange"></span> года</h1>
     </div>
@@ -33,7 +32,7 @@
         <div class="degree-card degree-card-bachelor custom-degree-card no-animation">
             <div class="degree-title">Бакалавриат (специалитет)</div>
             <div class="degree-card-separator-line degree-card-separator-line-bachelor"></div>
-            <img src="bachelor_image.png" alt="Бакалавриат" class="degree-image">
+            <img src="{% static 'image/bachelor_image.png' %}" alt="Бакалавриат" class="degree-image">
         </div>
         <div class="button-container">
             <a href="choose_degree.html"><button class="back-button">Вернуться назад</button></a>
@@ -46,7 +45,7 @@
         <div class="filter-schedule-container">
             <!-- Блок фильтров -->
             <div id="filter-container" class="filter-container">
-                <select id="first-select" class="filter-select" name="Форма обучения">
+                <select id="first-select" class="filter-select" name="education_form">
                     <option value="" disabled selected>Выбрать форму обучения</option>
                     {% for item in first_select_items %}
                     <option value="{{ item }}">{{ item }}</option>
@@ -77,7 +76,7 @@
 </div>
 <!-- Кнопка прокрутки вверх -->
 <div id="scrollToTop" class="scroll-to-top">
-    <img src="/public/arrow-up-icon.png" alt="Вверх">
+    <img src="{% static 'image/arrow-up-icon.png' %}" alt="Вверх">
 </div>
 
 </body>

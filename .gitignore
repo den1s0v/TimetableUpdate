@@ -2,4 +2,6 @@
 __pycache__/
 migrations
 auth
-static/public
+static/fonts
+static/image
+static/style
