@@ -12,13 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 // Функция добавления слушателя
 function addEventListenerToSelector(selector) {
     selector.addEventListener('change', (event) => {
-        debugger;
         const selectorName = event.target.name;
         const selectedValue = event.target.value;
-        debugger;
+
         // Удалить все последующие селекторы
         dellSelectors(event.target)
-        debugger;
+
         // Отправить запрос на сервер если выбрано значение
         if (selectedValue !== "") {
             makeRequest()
@@ -84,7 +83,6 @@ function responseHandler(data) {
 
         // Заполняем контейнер элементами
         data.selector_items.forEach(optionText => {
-            debugger;
             const option = document.createElement('option');
             option.value = optionText;
             option.textContent = optionText;
