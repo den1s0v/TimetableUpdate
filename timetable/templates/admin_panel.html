@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <link rel="icon" href="{% static 'image/icon.png' %}" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Управление системой актуализации и версионирования расписания ВолгГТУ</title>
+  <link rel="stylesheet" href="{% static 'style/admin_panel_style.css' %}">
+</head>
+<body>
+<div class="container">
+  <h2>Управление системой актуализации расписания</h2>
+  <form>
+    <div class="form-group">
+      <label for="scanFrequency">Частота сканирования сайта ВолгГТУ (мин):</label>
+      <select id="scanFrequency">
+        <option value="30">30</option>
+        <option value="45">45</option>
+        <option value="60">60</option>
+        <option value="90">90</option>
+        <option value="120">120</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="rootUrl">Корневая ссылка для анализа:</label>
+      <input type="url" id="rootUrl" placeholder="Введите ссылку" required>
+    </div>
+    <div class="form-group">
+      <label for="authFile">Файл для авторизации на Google Drive:</label>
+      <input type="file" id="authFile" accept=".json">
+    </div>
+    <div class="form-group">
+      <label for="storageType">Тип хранилища для скачивания файлов:</label>
+      <select id="storageType">
+        {% for storage_type in storage_types %}
+          <option value="{{ storage_type }}">{{ storage_type }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="button" id="applyChangesButton" disabled>Применить изменения</button>
+  </form>
+  <hr>
+  <h3>Снимки системы:</h3>
+  <div class="form-group">
+    <label for="snapshotType">Выбрать элемент системы:</label>
+    <select id="snapshotType">
+      {% for snapshot_type in snapshot_types %}
+        <option value="{{ snapshot_type }}">{{ snapshot_type }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="button" onclick="getSnapshot()">Получить снимок</button>
+  <div id="snapshotSpinner" class="spinner" style="display: none;">Идёт обработка...</div>
+  <button id="downloadButton" style="display: none;">Скачать</button>
+  <h3>Очистка системы:</h3>
+  <div class="form-group">
+    <label for="dataLocation">Выбрать элемент системы:</label>
+    <select id="dataLocation">
+      {% for clear_type in clear_types %}
+        <option value="{{ clear_type }}">{{ clear_type }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="button" onclick="requestDataCleansing()" id="dropDataButton" class="drop_data_button">Очистить</button>
+  <div id="dataCleanSpinner" class="spinner" style="display: none;">Идёт очистка...</div>
+</div>
+  <script src="{% static 'src/admin_panel.js' %}"></script>
+</body>
+</html>

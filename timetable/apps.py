@@ -1,4 +1,17 @@
+from pathlib import Path
+
 from django.apps import AppConfig
+
+from myproject.settings import BASE_DIR, DATA_STORAGE_DIR
+
+TAG_CATEGORY_LIST = [
+    'education_form',
+    'degree', # Потом нужно убрать
+    'faculty',
+    'course',
+]
+DOWNLOAD_STORAGE_TYPE = "google drive"
+
 
 class TimetableConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

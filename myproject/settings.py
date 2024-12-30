@@ -15,7 +15,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "/static/"
+STATIC_ROOT = BASE_DIR / "static/"
 TEMP_DIR = BASE_DIR / 'temp'
 DATA_STORAGE_DIR = BASE_DIR / 'data'
 LIBREOFFICE_EXE = "libreoffice"
@@ -30,12 +30,12 @@ SECRET_KEY = 'django-insecure-#q+2%evpem%e=)1^w$&3=zs2x6k608&sd^0o+@nr(676xhz_6x
 DEBUG = True
 
 ALLOWED_HOSTS = [ '185.221.153.238' ]
-
+CSRF_TRUSTED_ORIGINS = ['https://185.221.153.238']
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -53,6 +53,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CSRF_COOKIE_SECURE = True
 
 ROOT_URLCONF = 'myproject.urls'
 
@@ -107,6 +109,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+LOGIN_URL = 'admin_login'
+LOGIN_REDIRECT_URL = 'admin_panel'
 
 
 # Internationalization

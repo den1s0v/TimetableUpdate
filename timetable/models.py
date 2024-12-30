@@ -1,4 +1,5 @@
 from django.db import models
+from django.templatetags.static import static
 
 
 class Tag(models.Model):
@@ -127,4 +128,21 @@ class Storage(models.Model):
     def __str__(self):
         return f"{self.path} ({self.storage_type})"
 
+class Task(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    status = models.CharField(max_length=150, verbose_name="Статус выполнения задачи")
+    params = models.JSONField()
+    result = models.JSONField(null=True)
+    error_message = models.TextField(null=True)
 
+    def __str__(self):
+        return f"{self.id}: {self.status}"
+
+class Snapshot(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    type = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    path = models.TextField(null=True)
+
+    def get_url(self):
+        return static(self.path)
