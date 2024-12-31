@@ -1,5 +1,5 @@
 import pytest
-from ..stringlistanalyzer import StringListAnalyzer
+from timetable.management.commands.version_core.stringlistanalyzer import StringListAnalyzer
 
 # --- Тесты для get_similar_string ---
 class TestGetSimilarString:

@@ -1,8 +1,10 @@
-import requests
 import logging
-from bs4 import BeautifulSoup
 import re
-from timetable.filedata import FileData
+
+import requests
+from bs4 import BeautifulSoup
+
+from .file_data import FileData
 
 
 class WebParser:
@@ -126,6 +128,7 @@ class WebParser:
             raise Exception(f"Error opening web page. URL: {url}")
 
         # Распарсить HTML страницу сайта
+        response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, 'html.parser')
 
         # Получение основного контента на странице

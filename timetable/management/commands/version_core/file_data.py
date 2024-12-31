@@ -1,14 +1,14 @@
-from pathlib import Path
-from unicodedata import category
-
-import requests
+import hashlib
 import json
 import re
 from datetime import datetime
+from pathlib import Path
+
+import requests
 from openpyxl import load_workbook
-import hashlib
-from timetable.stringlistanalyzer import StringListAnalyzer
+
 from timetable.models import Resource, FileVersion, Tag
+from .stringlistanalyzer import StringListAnalyzer
 
 
 class FileData:

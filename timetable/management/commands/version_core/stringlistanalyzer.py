@@ -1,4 +1,3 @@
-import re
 import difflib
 
 class StringListAnalyzer:

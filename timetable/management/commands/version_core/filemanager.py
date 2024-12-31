@@ -1,18 +1,18 @@
-from pathlib import Path
-import time
-import random
-import subprocess
 import os
+import subprocess
+from pathlib import Path
 
 from myproject.settings import TEMP_DIR, LIBREOFFICE_EXE
-from timetable.StorageManager import StorageManager
-from timetable.models import Resource, FileVersion, Storage, Tag, Setting
-from timetable.parser import WebParser
+from timetable.models import Resource, FileVersion, Tag, Setting
+from .parser import WebParser
+from .storage_manager import StorageManager
+
 
 class FileManager:
     TIMETABLE_START_PATH = "Расписания/Расписание занятий/"
     MIN_SEC_DELAY_UPDATE = 5
     MAX_SEC_DELAY_UPDATE = 10
+    TIMETABLE_LINK = ""
 
     def __init__(self):
         # Задать новую директорию временных файлов
@@ -20,7 +20,6 @@ class FileManager:
         # Создать контейнер для хранилищ
         self.__storages = []
         # Взять путь к файлам из настроек
-        self.TIMETABLE_LINK = ""
         try:
             self.TIMETABLE_LINK = Setting.objects.get(key='analyze_url').value
         except Setting.DoesNotExist:
@@ -38,8 +37,7 @@ class FileManager:
         :return:
         """
         # Получить все файлы с сайта
-        files = WebParser.get_files_from_webpage(FileManager.TIMETABLE_LINK, FileManager.TIMETABLE_START_PATH)
-
+        files = WebParser.get_files_from_webpage(self.TIMETABLE_LINK, FileManager.TIMETABLE_START_PATH)
         # Для всех файлов
         for file_data in files:
             print("path:", file_data.get_path(), "name:", file_data.get_name())
@@ -72,7 +70,6 @@ class FileManager:
 
                 # Выбрать уже существующий ресурс
                 resource = resource_from_db
-
 
                 # Найти последнюю запись с информацией о версии файла
                 file_version_from_db = FileVersion.objects.filter(resource=resource).order_by('-last_changed',  '-timestamp').first()
@@ -138,7 +135,7 @@ class FileManager:
         :param last_version: Предыдущая версия.
         :return: Результат анализа.
         """
-        return new_version.last_changed != last_version.last_changed or new_version.hashsum != last_version.hashsum
+        return new_version.hashsum != last_version.hashsum
 
     def save_file_to_storages(self, file_path:Path|str, resource:Resource, file_version:FileVersion):
         """

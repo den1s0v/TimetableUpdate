@@ -1,11 +1,11 @@
-from attr.validators import instance_of
 from fs.googledrivefs import GoogleDriveFS
-from googleapiclient.discovery import build
 from google.oauth2 import service_account
-import os
+from googleapiclient.discovery import build
 
-from timetable.StorageManager import StorageManager
-from timetable.models import Resource, FileVersion, Storage
+from timetable.models import Storage
+from .storage_manager import StorageManager
+
+
 class StorageManagerGoogleDrive (StorageManager):
     def __init__(self, storage_type:str, json_file_path:str):
         """
@@ -21,7 +21,6 @@ class StorageManagerGoogleDrive (StorageManager):
         fs = GoogleDriveFS(creds)
         # Подключение напрямую для получения id файлов
         self._service = build('drive', 'v3', credentials=creds)
-
         # Инициализация родительского класса
         super().__init__(storage_type, fs)
 

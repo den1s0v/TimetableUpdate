@@ -1,16 +1,13 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from pathlib import Path
 
 import fs
 import fs.copy
-from coverage.files import actual_path
-from django.core.files.storage import storages
-from django.utils.timezone import override
 from fs.memoryfs import FS
-from pathlib import Path
-
-from lxml.doctestcompare import PARSE_HTML
 
 from timetable.models import Resource, FileVersion, Storage
+
+
 class StorageManager(ABC):
     # ------------------КОНСТРУКТОРЫ------------------- #
     def __init__(self, storage_type:str, fs_root:FS):
@@ -118,8 +115,12 @@ class StorageManager(ABC):
         """
         Очищает всё хранилище, удаляет все записи о себе в базе данных.
         """
+        # Удалить все записи в базе данных о себе
+        self.__clear_storage_in_db()
+
         # Удалить каждый объект в корневой папке
         for path in self._fs_root.listdir("/"):
+            print("clear in", self.__storage_type, path)
             # Удалить путь, даже если в нём есть файлы
             if self._fs_root.isdir(path):
                 self._fs_root.removetree(path)
@@ -127,8 +128,6 @@ class StorageManager(ABC):
             else:
                 self._fs_root.remove(path)
 
-        # Удалить все записи в базе данных о себе
-        self.__clear_storage_in_db()
 
     def get_storage_type(self):
         return self.__storage_type
@@ -164,7 +163,8 @@ class StorageManager(ABC):
         # Найти предыдущую версию, которая является актуальной
         storage = Storage.objects.filter(storage_type=self.__storage_type, file_version=file_version).first()
         if storage is None:
-            raise Exception("Storage does not exist")
+            print("Тут раньше ломался")
+            return
 
         # Создать для версии архивный путь
         archive_path = self.__create_archive_file_path(resource, file_version)
