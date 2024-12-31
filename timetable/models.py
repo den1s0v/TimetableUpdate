@@ -146,3 +146,11 @@ class Snapshot(models.Model):
 
     def get_url(self):
         return static(self.path)
+
+class Setting(models.Model):
+    key = models.CharField(max_length=255, primary_key=True)  # Уникальное имя настройки
+    value = models.TextField()  # Значение настройки
+    description = models.TextField(null=True)  # Описание для админки
+
+    def __str__(self):
+        return f"{self.key}: {self.value}"

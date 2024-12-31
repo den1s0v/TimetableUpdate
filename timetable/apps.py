@@ -11,11 +11,15 @@ TAG_CATEGORY_LIST = [
     'course',
 ]
 DOWNLOAD_STORAGE_TYPE = "google drive"
-
+AVAILABLE_KEYS = {'time_update', 'analyze_url', 'download_storage'}
 
 class TimetableConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'timetable'
+
+    def __init__(self, app_name, app_module):
+        super().__init__(app_name, app_module)
+        self.file_manager = None
 
     def ready(self):
         # Добавить все необходимые библиотеки
@@ -25,18 +29,19 @@ class TimetableConfig(AppConfig):
         import fs.copy
 
         # Путь к json файл
-        json_dir = "C:/Users/Ilya/Downloads/apt-sentinel-441610-i2-ad78fb036ada.json"
+        json_dir = str(BASE_DIR / "auth" / "google_drive_auth.json")
+
         # Путь к корневой папке локального хранилища
-        local_fs = fs.open_fs('osfs://C:/Users/Ilya/Documents/Файлы сервера/файлы')
+        local_dir = DATA_STORAGE_DIR
+        local_dir.mkdir(exist_ok=True)
+        local_fs = fs.open_fs(str(local_dir))
 
         # Создать хранилища
-        sm_google = StorageManagerGoogleDrive("google drive", json_dir)
-        sm_local = StorageManager("local", local_fs)
+        self.sm_google = StorageManagerGoogleDrive("google drive", json_dir)
+        self.sm_local = StorageManager("local", local_fs)
 
         # Создать класс управления файлами
-        fm = FileManager()
+        self.file_manager = FileManager()
         # Добавить в него проинициализированные хранилища
-        fm.add_storage(sm_local)
-        fm.add_storage(sm_google)
-        # Обновить расписание
-        fm.update_timetable()
+        self.file_manager.add_storage(self.sm_local)
+        self.file_manager.add_storage(self.sm_google)

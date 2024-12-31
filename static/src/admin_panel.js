@@ -129,7 +129,7 @@ async function sendSystemSettings(params) {
     }
 
     // Отправить запрос
-    const response = await fetch(`${url}set_params`,
+    const response = await fetch(`${url}settings`,
         {
             method: 'POST', // Указываем метод запроса
             headers: {

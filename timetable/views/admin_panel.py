@@ -1,13 +1,16 @@
 import asyncio
+import json
 
 from asgiref.sync import async_to_sync, sync_to_async
+from django.apps import apps
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
 from myproject.settings import STATIC_ROOT
-from timetable.models import Task, Snapshot
+from timetable.apps import AVAILABLE_KEYS
+from timetable.models import Task, Snapshot, Setting
 from timetable.snapshots import database_backup
 
 storage_types = ['Google Drive', 'Yandex Drive', 'Локальное хранилище']
@@ -42,6 +45,24 @@ def put_google_auth_file(request):
     return HttpResponse(status=200)
 
 def set_system_params(request):
+    data = json.loads(request.body)
+
+    for key, value in data.items():
+        # Проверка на наличие ключа в списке допустимых настроек
+        if key not in AVAILABLE_KEYS:
+            continue
+
+        # Выполнение дополнительных действия для конкретных ключей
+        match (key):
+            case 'analyze_url':
+                file_manager = apps.get_app_config('timetable').file_manager
+                file_manager.TIMETABLE_LINK = value
+
+        # Сохранение ключа в память
+        setting, created = Setting.objects.get_or_create(key=key)
+        setting.value = value
+        setting.save()
+
     return HttpResponse(status=200)
 
 def snapshot(request):

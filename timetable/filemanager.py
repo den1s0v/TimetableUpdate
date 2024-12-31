@@ -6,12 +6,11 @@ import os
 
 from myproject.settings import TEMP_DIR, LIBREOFFICE_EXE
 from timetable.StorageManager import StorageManager
-from timetable.models import Resource, FileVersion, Storage, Tag
+from timetable.models import Resource, FileVersion, Storage, Tag, Setting
 from timetable.parser import WebParser
 
 class FileManager:
     TIMETABLE_START_PATH = "Расписания/Расписание занятий/"
-    TIMETABLE_LINK = "https://www.vstu.ru/student/raspisaniya/zanyatiy/"
     MIN_SEC_DELAY_UPDATE = 5
     MAX_SEC_DELAY_UPDATE = 10
 
@@ -20,7 +19,12 @@ class FileManager:
         os.environ["TMPDIR"] = str(TEMP_DIR)
         # Создать контейнер для хранилищ
         self.__storages = []
-
+        # Взять путь к файлам из настроек
+        self.TIMETABLE_LINK = ""
+        try:
+            self.TIMETABLE_LINK = Setting.objects.get(key='analyze_url').value
+        except Setting.DoesNotExist:
+            self.TIMETABLE_LINK = "https://www.vstu.ru/student/raspisaniya/zanyatiy/"
     def add_storage(self, storage: StorageManager):
         """
         Добавить новое хранилище.
