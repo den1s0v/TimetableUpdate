@@ -1,14 +1,14 @@
 const csrftoken = getCookie('csrftoken');
 const url = 'https://185.221.153.238/admin/';
 const urlStatic = 'https://185.221.153.238/static/';
-const secondsTimeWait = 300;
+const secondsTimeWait = 600;
 /*---------- ИЗМЕНЕНИЕ КОНФИГУРАЦИИ СИСТЕМЫ -----------*/
 
 // Найти все элементы формы и кнопку
 const formElements = document.querySelectorAll('#scanFrequency, #rootUrl, #authFile, #storageType');
 const applyChangesButton = document.getElementById('applyChangesButton');
 
-// Список ссылкок на скачивание снимков системы
+// Список ссылок на скачивание снимков системы
 const snapshotDownloadUrls = {};
 fillSnapshotDownloadUrls();
 
