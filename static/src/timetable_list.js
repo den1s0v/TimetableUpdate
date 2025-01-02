@@ -92,6 +92,37 @@ function responseHandler(data) {
         //Добавляем новый селектор
         dropdownContainer.appendChild(select)
     }
+    else if (data.result === "files") {
+        const container = document.getElementById("schedule-container");
+
+        for (const fileIndex in data.files) {
+            const file = data.files[fileIndex]
+            const item = document.createElement('div');
+            const name = document.createElement('span');
+            name.className = "file-title";
+            name.textContent = file.name;
+            const lastUpdate = document.createElement('p');
+            lastUpdate.textContent = `Дата изменения: ${file.last_update}`;
+            const viewContainer = document.createElement('div');
+            for (const resourceName in file.view_urls) {
+                const url = file.view_urls[resourceName];
+                const viewItem = document.createElement('a');
+                viewItem.textContent = resourceName;
+                viewItem.href = url;
+                viewContainer.appendChild(viewItem);
+            }
+            const archiveUrl = document.createElement('a');
+            archiveUrl.textContent = "Архив";
+            archiveUrl.href = file.archive_urls;
+            item.appendChild(name)
+            item.appendChild(lastUpdate)
+            item.appendChild(viewContainer)
+            item.appendChild(archiveUrl)
+
+            container.appendChild(item)
+        }
+
+    }
 }
 
 function dellSelectors(targetElement) {

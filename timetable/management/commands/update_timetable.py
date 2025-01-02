@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 import logging
 
 from myproject.settings import DATA_STORAGE_DIR, GOOGLE_AUTH_FILE
+from timetable.apps import GOOGLE_DRIVE_STORAGE_MAME, LOCAL_STORAGE_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class Command(BaseCommand):
         local_fs = fs.open_fs(str(local_dir))
 
         # Создать хранилища
-        sm_google = StorageManagerGoogleDrive("google drive", GOOGLE_AUTH_FILE)
-        sm_local = StorageManager("local", local_fs)
+        sm_google = StorageManagerGoogleDrive(GOOGLE_DRIVE_STORAGE_MAME, GOOGLE_AUTH_FILE)
+        sm_local = StorageManager(LOCAL_STORAGE_NAME, local_fs)
 
         # Создать класс управления файлами
         file_manager = FileManager()

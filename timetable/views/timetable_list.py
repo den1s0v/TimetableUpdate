@@ -4,8 +4,9 @@ from django.http import HttpResponseNotAllowed, JsonResponse
 # Create your views here.
 from django.shortcuts import render
 
-from timetable.models import Tag, Resource, FileVersion, Storage
-from ..apps import TAG_CATEGORY_LIST, DOWNLOAD_STORAGE_TYPE
+from timetable.models import Tag, Resource, FileVersion, Storage, Setting
+from ..apps import TAG_CATEGORY_LIST, LOCAL_STORAGE_NAME
+
 
 def timetable_list(request):
     first_select_items = [
@@ -81,6 +82,10 @@ def get_new_selector_answer(categories, related_tags):
 
 def get_files_list_answer(resources):
     files = []
+    try:
+         download_storage_type = Setting.objects.get(key='analyze_url').value
+    except Setting.DoesNotExist:
+        download_storage_type = LOCAL_STORAGE_NAME
 
     for resource in resources:
         last_version = FileVersion.objects.filter(resource=resource).order_by('-last_changed','-timestamp').first()
@@ -89,7 +94,7 @@ def get_files_list_answer(resources):
         download_url = ""
         for storage in storages:
             storage_type = storage.storage_type
-            if storage_type == DOWNLOAD_STORAGE_TYPE:
+            if storage_type == download_storage_type:
                 download_url = storage.download_url
 
             resource_url = storage.resource_url
