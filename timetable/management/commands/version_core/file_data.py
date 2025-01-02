@@ -583,10 +583,18 @@ class FileData:
 
     def get_tags(self):
         l = []
-        l.append(Tag(name = self.get_degree(), category = "degree"))
-        l.append(Tag(name = self.get_education_form(), category = "education_form"))
-        l.append(Tag(name = self.get_faculty(), category = "faculty"))
-        l.append(Tag(name = self.get_course(), category = "course"))
+        degree = self.get_degree()
+        if degree is not None:
+            l.append(Tag(name = degree, category = "degree"))
+        education_form = self.get_education_form()
+        if education_form is not None:
+            l.append(Tag(name = education_form, category = "education_form"))
+        faculty = self.get_faculty()
+        if faculty is not None:
+            l.append(Tag(name = faculty, category = "faculty"))
+        course = self.get_course()
+        if course is not None:
+            l.append(Tag(name = course, category = "course"))
         return l
 
     def get_resource(self):
