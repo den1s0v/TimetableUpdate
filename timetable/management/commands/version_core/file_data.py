@@ -592,9 +592,10 @@ class FileData:
         faculty = self.get_faculty()
         if faculty is not None:
             l.append(Tag(name = faculty, category = "faculty"))
-        course = self.get_course()
+        course = self.__course
         if course is not None:
-            l.append(Tag(name = course, category = "course"))
+            for course in self.__course:
+                l.append(Tag(name = str(course), category = "course"))
         return l
 
     def get_resource(self):
