@@ -8,8 +8,9 @@ TAG_CATEGORY_LIST = [
     'faculty',
     'course',
 ]
-DOWNLOAD_STORAGE_TYPE = "google drive"
-AVAILABLE_KEYS = {'time_update', 'analyze_url', 'google_json_dir', 'google_json_dir'}
+GOOGLE_DRIVE_STORAGE_MAME = "google drive"
+LOCAL_STORAGE_NAME = 'local'
+AVAILABLE_KEYS = {'time_update', 'analyze_url', 'google_json_dir', 'download_storage'}
 
 class TimetableConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

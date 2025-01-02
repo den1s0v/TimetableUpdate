@@ -199,8 +199,13 @@ async function getSnapshot() {
     downloadButton.style.display = 'none';
     spinner.style.display = 'block';
 
+    // Создать тело запроса
+    let params = new URLSearchParams();
+    params.append('action', 'make_new');
+    params.append('snapshot', snapshotType);
+
     // Делаем запрос на создание нового снимка и получаем id процесса
-    const processId = await makeSnapshot();
+    const processId = await makePostResponse('snapshot', params);
 
     debugger;
     // Дождаться получения снимка если есть id процесса
@@ -235,37 +240,6 @@ async function getSnapshot() {
             downloadButton.style.display = 'block'; // Показываем кнопку "Скачать"
         }
     }
-}
-
-async function makeSnapshot() {
-    debugger;
-    // Создать тело запроса
-    const snapshotType = document.getElementById('snapshotType').value;
-    let params = new URLSearchParams();
-    params.append('action', 'make_new');
-    params.append('snapshot', snapshotType);
-
-    // Отправить запрос
-    const response = await fetch(`${url}snapshot`,
-        {
-            method: 'POST', // Указываем метод запроса
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded', // Указываем тип данных
-                'X-CSRFToken': csrftoken,
-            },
-            body:  params.toString() // Преобразуем объект в JSON-строку
-        })
-
-    // Завершить выполнение, если ответ некорректный
-    if (!response.ok) {
-        return null;
-    }
-
-    // Распарсить ответ и вернуть номер процесса
-    const data = await response.json();
-
-    // Вернуть ID процесса, если снимок принят в работу.
-    return data?.id;
 }
 
 async function getSnapshotUrl(processId) {
@@ -348,19 +322,75 @@ function requestDataCleansing() {
 
     // Если пользователь нажал "OK", выполняем очистку
     if (isConfirmed) {
-        // Здесь добавьте нашу логику очистки данных
         spinner.style.display = 'block';
+        dellData()
         alert("Происходит очистка. Пожалуйста подождите."); // Сообщение о начале очистки
-        // Имитация обработки очистки
-        setTimeout(() => {
-            alert(`Очистка: "${selectedOptionText.toLowerCase()}" завершена успешно!`); // Сообщение после очистки
-            spinner.style.display = 'none'; // Скрываем спиннер
-        }, 3000); // Имитация обработки 3 секунды
+
     } else {
+        spinner.style.display = 'none';
         // Если пользователь нажал "Отмена", ничего не делаем
         alert("Очистка отменена.");
     }
 }
+
+
+async function dellData() {
+    const dataLocationSelect = document.getElementById('dataLocation');
+    const component = dataLocationSelect.value;
+    // Создать тело запроса
+    let params = new URLSearchParams();
+    params.append('action', 'dell');
+    params.append('component', component);
+
+    // Делаем запрос на создание нового снимка и получаем id процесса
+    const processId = await makePostResponse('manage_storage', params);
+
+    // Дождаться получения снимка если есть id процесса
+    if (processId !== null) {
+        let time = new Date(); // Время начала изготовления списка
+        let success = null
+
+        // Проверять состояние процесса создания файла до истечения таймаута или пока файл не найден
+        while (((new Date()) - time)/1000 < secondsTimeWait && success === null) {
+            debugger;
+            // Повторный запрос
+            success = await getDellResult(processId)
+            // Ожидание
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        if (success === true) {
+            alert(`Очистка: "${component.toLowerCase()}" завершена успешно!`);
+        }
+        else {
+            alert(`Не удалось завершить очистку: "${component.toLowerCase()}"!`);
+        }
+    }
+
+    const spinner = document.getElementById('dataCleanSpinner');
+    spinner.style.display = 'none';
+}
+
+async function getDellResult(processId) {
+    // Отправить запрос
+    const response = await fetch(`${url}manage_storage?process_id=${processId}`);
+
+    // Завершить выполнение, если ответ некорректный
+    if (response.ok) {
+        // Обработать ответ
+        const data = await response.json();
+        if (data?.status === "success") {
+            return true
+        }
+        else if (data?.status === "error") {
+            alert (data?.result?.error_message);
+            return false;
+        }
+    }
+
+    return null;
+}
+
 
 // Функция для получения CSRF-токена из cookie
 function getCookie(name) {
@@ -402,4 +432,28 @@ function downloadFile(url, filename) {
 
     // Удаляем элемент из DOM
     document.body.removeChild(link);
+}
+
+async function makePostResponse(nextUrl, params) {
+    // Отправить запрос
+    const response = await fetch(`${url}${nextUrl}`,
+        {
+            method: 'POST', // Указываем метод запроса
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded', // Указываем тип данных
+                'X-CSRFToken': csrftoken,
+            },
+            body:  params.toString() // Преобразуем объект в JSON-строку
+        })
+
+    // Завершить выполнение, если ответ некорректный
+    if (!response.ok) {
+        return null;
+    }
+
+    // Распарсить ответ и вернуть номер процесса
+    const data = await response.json();
+
+    // Вернуть ID процесса, если снимок принят в работу.
+    return data?.id;
 }

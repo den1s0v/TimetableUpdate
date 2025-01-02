@@ -1,23 +1,28 @@
 import asyncio
 import json
+import threading
 
-from asgiref.sync import async_to_sync, sync_to_async
-from django.apps import apps
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
-from myproject.settings import STATIC_ROOT
+from myproject.settings import GOOGLE_AUTH_FILE
 from timetable.apps import AVAILABLE_KEYS
+from timetable.cron_utils import create_update_timetable_cron_task
 from timetable.models import Task, Snapshot, Setting
-from timetable.snapshots import database_backup
+from timetable.task.make_task import make_task
+from timetable.task.snapshot import task_make_snapshot
 
 storage_types = ['Google Drive', 'Yandex Drive', 'Локальное хранилище']
-snapshot_types = ['База данных', 'Все хранилища', 'Google Drive', 'Yandex Drive', 'Вся система']
-clear_types = ['Вся система', 'Все хранилища', 'Google Drive', 'Yandex Drive']
+snapshot_types = ['Вся система', 'База данных', 'Google Drive', 'Yandex Drive', 'Локальное хранилище']
+clear_types = ['Вся система', 'Все хранилища', 'Google Drive', 'Yandex Drive', 'Локальное хранилище']
 
 def admin_login(request):
+    """
+    Обработчик авторизации.
+    """
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -31,6 +36,9 @@ def admin_login(request):
 
 @login_required
 def admin_panel(request):
+    """
+    Обработчик панели администратора.
+    """
     if not request.user.is_staff:
         return redirect('admin_login')
 
@@ -42,9 +50,35 @@ def admin_panel(request):
     return render (request, 'admin_panel.html', params)
 
 def put_google_auth_file(request):
+    """
+    Обновить файл авторизации гугл.
+    """
+    if request.method == 'PUT':
+        try:
+            # Получаем содержимое тела запроса
+            file_content = request.body.decode('utf-8')  # Читаем тело запроса как текст
+
+            # Преобразуем содержимое в JSON (если требуется)
+            file_data = json.loads(file_content)
+
+            # Сохраняем файл на сервере (опционально)
+            with GOOGLE_AUTH_FILE.open(mode='w', encoding='utf-8') as f:
+                json.dump(file_data, f, indent=4)
+
+            return JsonResponse({'status': 'success', 'message': 'Файл загружен'}, status=200)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Неверный формат JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Метод не поддерживается'}, status=405)
+    text = request.POST.get('text')
     return HttpResponse(status=200)
 
 def set_system_params(request):
+    """
+    Обработчик задания настроек для системы.
+    """
     data = json.loads(request.body)
 
     for key, value in data.items():
@@ -52,20 +86,22 @@ def set_system_params(request):
         if key not in AVAILABLE_KEYS:
             continue
 
-        # Выполнение дополнительных действия для конкретных ключей
-        match (key):
-            case 'analyze_url':
-                file_manager = apps.get_app_config('timetable').file_manager
-                file_manager.TIMETABLE_LINK = value
-
         # Сохранение ключа в память
         setting, created = Setting.objects.get_or_create(key=key)
         setting.value = value
         setting.save()
 
+        # Выполнение дополнительных действия для конкретных ключей
+        match (key):
+            case 'time_update':
+                create_update_timetable_cron_task()
+
     return HttpResponse(status=200)
 
 def snapshot(request):
+    """
+    Обработчик запросов по снимкам.
+    """
     if request.method == 'POST':
         action = request.POST.get('action')
         if (action == 'make_new'):
@@ -75,7 +111,7 @@ def snapshot(request):
                 'snapshot' : snapshot,
             }
             snapshot_task = Task.objects.create(status="running", params=params)
-            async_to_sync(make_snapshot)(snapshot_task)
+            threading.Thread(target=asyncio.run, args=(make_task(snapshot_task),)).start()
             return JsonResponse({'status':snapshot_task.status, 'id': snapshot_task.id}, status=202)
 
     elif request.method == 'GET':
@@ -96,19 +132,29 @@ def snapshot(request):
 
     return HttpResponse(status=400)
 
-
 def manage_storage(request):
-    return HttpResponse(status=200)
-
-async def make_snapshot(task :Task):
-    print(task)
-    match(task.params.get('snapshot', None)):
-        case 'База данных':
-            file_path = await database_backup()
-            print(file_path)
-            result = {
-                'url' : str(file_path.relative_to(STATIC_ROOT)),
+    """Обработчик управления хранилищами."""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if (action == 'dell'):
+            component = request.POST.get('component')
+            params = {
+                'action': action,
+                'component': component,
             }
-            task.result = result
-            task.status = 'success'
-            await sync_to_async(task.save)()
+            snapshot_task = Task.objects.create(status="running", params=params)
+            threading.Thread(target=asyncio.run, args=(make_task(snapshot_task),)).start()
+            return JsonResponse({'status': snapshot_task.status, 'id': snapshot_task.id}, status=202)
+
+    elif request.method == 'GET':
+        keys = request.GET.keys()
+        if 'process_id' in keys:
+            process_id = request.GET.get('process_id')
+            task = Task.objects.get(id=int(process_id))
+            if (task is not None):
+                return JsonResponse({'status': task.status, 'result': task.result, 'error_message': task.error_message},
+                                    status=200)
+
+
+    return HttpResponse(status=400)
+
