@@ -83,7 +83,7 @@ def get_new_selector_answer(categories, related_tags):
 def get_files_list_answer(resources):
     files = []
     try:
-         download_storage_type = Setting.objects.get(key='analyze_url').value
+         download_storage_type = Setting.objects.get(key='download_storage').value
     except Setting.DoesNotExist:
         download_storage_type = LOCAL_STORAGE_NAME
 
@@ -91,6 +91,7 @@ def get_files_list_answer(resources):
         last_version = FileVersion.objects.filter(resource=resource).order_by('-last_changed','-timestamp').first()
         storages = Storage.objects.filter(file_version=last_version)
         view_urls = dict()
+        archive_urls = dict()
         download_url = ""
         for storage in storages:
             storage_type = storage.storage_type
@@ -101,12 +102,16 @@ def get_files_list_answer(resources):
             if resource_url is not None:
                 view_urls[storage_type] = resource_url
 
+            archive_url = storage.archive_url
+            if archive_url is not None:
+                archive_urls[storage_type] = archive_url
+
         res_data = {
             "name": resource.name,
             "last_update" : resource.last_update,
             "download_url": download_url,
             "view_urls" : view_urls,
-            "archive_urls" : download_url
+            "archive_urls" : archive_urls
         }
 
         files.append(res_data)

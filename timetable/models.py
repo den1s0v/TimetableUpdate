@@ -118,6 +118,7 @@ class Storage(models.Model):
     path = models.TextField(null=True, blank=True, default=None, verbose_name="Путь к файлу")  # Путь
     download_url = models.TextField(null=True, blank=True, default=None, verbose_name="Ссылка для скачивания")  # Скачивание
     resource_url = models.TextField(null=True, blank=True, default=None, verbose_name="Ссылка на ресурс")  # Прямая ссылка
+    archive_url = models.TextField(null=True, verbose_name="Ссылка на папку с архивными версиями") # Просмотр архива
 
     class Meta:
         db_table = 'storage'

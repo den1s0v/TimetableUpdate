@@ -63,6 +63,7 @@ async function makeRequest() {
 
 // Функция обработки ответа
 function responseHandler(data) {
+    dellFilesList()
     if (data.result === "selector") {
         // Получить список элементов
         const dropdownContainer = document.getElementById('filter-container');
@@ -98,6 +99,7 @@ function responseHandler(data) {
         for (const fileIndex in data.files) {
             const file = data.files[fileIndex]
             const item = document.createElement('div');
+            item.className = "schedule-item"
             const name = document.createElement('span');
             name.className = "file-title";
             name.textContent = file.name;
@@ -111,13 +113,18 @@ function responseHandler(data) {
                 viewItem.href = url;
                 viewContainer.appendChild(viewItem);
             }
-            const archiveUrl = document.createElement('a');
-            archiveUrl.textContent = "Архив";
-            archiveUrl.href = file.archive_urls;
+            const archiveContainer = document.createElement('div');
+            for (const resourceName in file.archive_urls) {
+                const url = file.archive_urls[resourceName];
+                const archiveItem = document.createElement('a');
+                archiveItem.textContent = resourceName;
+                archiveItem.href = url;
+                viewContainer.appendChild(archiveItem);
+            }
             item.appendChild(name)
             item.appendChild(lastUpdate)
             item.appendChild(viewContainer)
-            item.appendChild(archiveUrl)
+            item.appendChild(archiveContainer)
 
             container.appendChild(item)
         }
@@ -139,6 +146,16 @@ function dellSelectors(targetElement) {
             } else if (child === targetElement){
                 flag = true;
             }
+        }
+    });
+}
+
+function dellFilesList() {
+    // Получить список элементов
+    const filesContainer = document.getElementById('schedule-container');
+     Array.from(filesContainer.children).forEach((child) => {
+        if (child.tagName === 'DIV') {
+            filesContainer.removeChild(child);
         }
     });
 }

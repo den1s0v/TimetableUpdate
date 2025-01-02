@@ -17,7 +17,7 @@ class StorageManager(ABC):
         :param fs_root: Корневая файловая система.
         """
         self._fs_root = fs_root
-        self.__storage_type = storage_type
+        self._storage_type = storage_type
 
     # -----------------ОТКРЫТЫЕ МЕТОДЫ----------------- #
     def add_new_file_version(self, local_file_path:Path|str, resource:Resource, file_version:FileVersion):
@@ -55,7 +55,7 @@ class StorageManager(ABC):
 
         # Создать запись в базе данных с информацией об этом файле
         new_storage = Storage()
-        new_storage.storage_type = self.__storage_type
+        new_storage.storage_type = self._storage_type
         new_storage.path = actual_file_path
         new_storage = self._set_storage_link(actual_file_path, new_storage)
         new_storage.file_version = file_version
@@ -88,7 +88,7 @@ class StorageManager(ABC):
         :param file_version: Запись в базе данных содержащая информацию о версии файла.
         """
         # Найти все записи с информацией о ресурсе, которые принадлежат этому ресурсу и относятся к этой версии файла
-        storages = Storage.objects.filter(file_version = file_version, storage_type = self.__storage_type)
+        storages = Storage.objects.filter(file_version = file_version, storage_type = self._storage_type)
 
         # Удалить файл для каждого хранилища и запись о нём в базе данных
         for storage in storages:
@@ -100,7 +100,7 @@ class StorageManager(ABC):
         :param storage: Запись в базе данных с информацией о файле на этом ресурсе.
         """
         # Завершить выполнение досрочно, если запись содержит информацию о файле не в этом хранилище.
-        if storage.storage_type != self.__storage_type:
+        if storage.storage_type != self._storage_type:
             return False
 
         # Удалить файл, если он существует
@@ -120,7 +120,7 @@ class StorageManager(ABC):
 
         # Удалить каждый объект в корневой папке
         for path in self._fs_root.listdir("/"):
-            print("clear in", self.__storage_type, path)
+            print("clear in", self._storage_type, path)
             # Удалить путь, даже если в нём есть файлы
             if self._fs_root.isdir(path):
                 self._fs_root.removetree(path)
@@ -130,7 +130,7 @@ class StorageManager(ABC):
 
 
     def get_storage_type(self):
-        return self.__storage_type
+        return self._storage_type
 
     # ----------------ПРИВАТНЫЕ МЕТОДЫ----------------- #
     def _set_storage_link(self, file_dir:str, storage:Storage):
@@ -144,14 +144,18 @@ class StorageManager(ABC):
         storage.download_url = None
         return storage
 
-    def _make_file_public(self, file_system:FS, file_dir:str):
+    def _make_file_public(self, file_dir:str):
         """
         Делает файл публичным.
-        :param file_system: Файловая система.
         :param file_dir: Путь к файлу.
         """
         pass
-
+    def _make_dir_public(self, file_dir: str):
+        """
+        Делает папку публичной.
+        :param file_dir: Путь к файлу.
+        """
+        pass
     # -----------------ЗАКРЫТЫЕ МЕТОДЫ----------------- #
     def __make_file_version_is_archive(self, resource: Resource, file_version: FileVersion):
         """
@@ -161,7 +165,7 @@ class StorageManager(ABC):
         :return:
         """
         # Найти предыдущую версию, которая является актуальной
-        storage = Storage.objects.filter(storage_type=self.__storage_type, file_version=file_version).first()
+        storage = Storage.objects.filter(storage_type=self._storage_type, file_version=file_version).first()
         if storage is None:
             print("Тут раньше ломался")
             return
@@ -200,8 +204,8 @@ class StorageManager(ABC):
                     # Чтение части данных из исходного файла
                     chunk = source_file.read(chunk_size)
         # Задаём файлам открытые права доступа
-        self._make_file_public(fs_source, source_file_path)
-        self._make_file_public(fs_destination, destination_file_path)
+        self._make_file_public(destination_file_path)
+        self._make_dir_public(destination_file_path)
 
     def __copy_file(self, fs_source:FS, source_file_path: str, fs_destination:FS, destination_file_path: str):
         """
@@ -216,7 +220,8 @@ class StorageManager(ABC):
         # Копируем файл
         fs.copy.copy_file(fs_source, source_file_path, fs_destination, destination_file_path)
         # Задаём новому файлу открытые права доступа
-        self._make_file_public(fs_destination, destination_file_path)
+        self._make_file_public(destination_file_path)
+        self._make_dir_public(destination_file_path)
 
     def __create_actual_file_path(self, resource:Resource, file_version:FileVersion):
         """
@@ -273,6 +278,6 @@ class StorageManager(ABC):
         """
         Удалить все записи, содержащие информацию об этом хранилище.
         """
-        storages = Storage.objects.filter(storage_type = self.__storage_type)
+        storages = Storage.objects.filter(storage_type = self._storage_type)
         for storage in storages:
             storage.delete()
