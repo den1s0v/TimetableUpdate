@@ -610,6 +610,7 @@ class FileData:
         new_resource.name = self.get_name()
         new_resource.metadata = self.get_json()
         new_resource.add_tags(*self.get_tags())
+        new_resource.deprecated = False
         return new_resource
 
     def get_file_version(self, file_path:Path|str, resource_id:int = None):
