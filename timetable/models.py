@@ -41,6 +41,7 @@ class Resource(models.Model):
         blank=True,
         verbose_name="Теги"
     )
+    deprecated = models.BooleanField(default=False, verbose_name="Ресурс устарел")
 
     def add_tags(self, *args):
         for tag in args:

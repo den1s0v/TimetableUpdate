@@ -38,6 +38,7 @@ class FileManager:
         """
         # Получить все файлы с сайта
         files = WebParser.get_files_from_webpage(self.TIMETABLE_LINK, FileManager.TIMETABLE_START_PATH)
+        used_resource_ids = set()
         # Для всех файлов
         for file_data in files:
             print("path:", file_data.get_path(), "name:", file_data.get_name())
@@ -70,6 +71,8 @@ class FileManager:
 
                 # Выбрать уже существующий ресурс
                 resource = resource_from_db
+                resource.deprecated = False
+                resource.save()
 
                 # Найти последнюю запись с информацией о версии файла
                 file_version_from_db = FileVersion.objects.filter(resource=resource).order_by('-last_changed',  '-timestamp').first()
@@ -83,8 +86,12 @@ class FileManager:
                     # Загрузить файл во все доступные хранилища
                     self.save_file_to_storages(file_path, resource, file_version)
 
+            # Сохранить используемый ресурс
+            used_resource_ids.add(resource.id)
+
             # Удалить временный файл
             file_path.unlink()
+        self.make_other_resource_deprecated(used_resource_ids)
 
     @classmethod
     def convert_xls_to_xlsx(cls, xls_file_path:Path|str, dell_xls = True):
@@ -150,3 +157,9 @@ class FileManager:
         for storage in self.__storages:
             storage.add_new_file_version(file_path, resource, file_version)
             print("load this file on", storage.get_storage_type())
+
+    def make_other_resource_deprecated(self, used_resource_ids):
+        resources = Resource.objects.exclude(id__in=used_resource_ids).filter(deprecated=False)
+        for resource in resources:
+            resource.deprecated = True
+            resource.save()

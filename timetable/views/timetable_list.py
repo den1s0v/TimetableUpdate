@@ -47,7 +47,7 @@ def timetable_params(request):
 
 def get_resource_by_tag(tags):
     # Получаем начальный QuerySet всех ресурсов
-    resources = Resource.objects.all()
+    resources = Resource.objects.filter(deprecated=False)
 
     # Фильтруем ресурсы для каждого переданного тега
     for key, values in tags.items():
