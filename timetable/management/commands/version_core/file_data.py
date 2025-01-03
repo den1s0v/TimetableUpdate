@@ -586,18 +586,22 @@ class FileData:
     def get_tags(self):
         l = []
         degree = self.get_degree()
-        if degree is not None:
-            l.append(Tag(name = degree, category = "degree"))
+        if degree is None:
+            degree = "Неопределенно"
+        l.append(Tag(name = degree, category = "degree"))
         education_form = self.get_education_form()
-        if education_form is not None:
-            l.append(Tag(name = education_form, category = "education_form"))
+        if education_form is None:
+            education_form = "Неопределенно"
+        l.append(Tag(name = education_form, category = "education_form"))
         faculty = self.get_faculty()
-        if faculty is not None:
-            l.append(Tag(name = faculty, category = "faculty"))
-        course = self.__course
-        if course is not None:
-            for course in self.__course:
-                l.append(Tag(name = str(course), category = "course"))
+        if faculty is None:
+            faculty = "Неопределенно"
+        l.append(Tag(name = faculty, category = "faculty"))
+        course_list = self.__course
+        if len(course_list) == 0:
+            course_list = ["Неопределенно"]
+        for course in course_list:
+            l.append(Tag(name = str(course), category = "course"))
         return l
 
     def get_resource(self):
