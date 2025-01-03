@@ -3,6 +3,8 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote
+
 
 import requests
 from openpyxl import load_workbook
@@ -122,7 +124,7 @@ class FileData:
 
         return self
 
-    def get_name(self): return self.__name_from_path
+    def get_name(self): return self.__correct_name_from_path
     def get_mimetype(self): return self.__mimetype_from_url
     def get_file_name(self): return self.__name_from_url_with_mimetype
 
@@ -380,7 +382,7 @@ class FileData:
         :return: Имя файла
         """
         # Получить имя файла с его расширением
-        file_name = path.split('/')[-1]
+        file_name = unquote(path.split('/')[-1])
 
         # Удалить расширение файла, если это необходимо
         if dell_mimetype:
