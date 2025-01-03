@@ -1,19 +1,15 @@
-
 from django.http import HttpResponseNotAllowed, JsonResponse
 
 # Create your views here.
 from django.shortcuts import render
+from openpyxl.compat import deprecated
 
 from timetable.models import Tag, Resource, FileVersion, Storage, Setting
 from ..apps import TAG_CATEGORY_LIST, LOCAL_STORAGE_NAME
 
 
 def timetable_list(request):
-    first_select_items = [
-        'Очная форма обучения',
-        'Очно-заочная форма',
-        'Заочная'
-    ]
+    first_select_items = get_selector_items(Tag.objects.all(), TAG_CATEGORY_LIST[0])
     return render(request, 'timetable_list.html', {'first_select_items': first_select_items})
 
 def timetable_params(request):
@@ -65,10 +61,7 @@ def get_new_selector_answer(categories, related_tags):
             break
 
     # Для категории определяем список тегов
-    selector_items = list()
-    for tag in related_tags:
-        if tag.category == next_category:
-            selector_items.append(tag.name)
+    selector_items = get_selector_items(related_tags, next_category)
 
     # Формируем ответ
     answer = {
@@ -79,6 +72,13 @@ def get_new_selector_answer(categories, related_tags):
     }
 
     return answer
+
+def get_selector_items(tags, next_category):
+    selector_items = list()
+    for tag in tags:
+        if tag.category == next_category:
+            selector_items.append(tag.name)
+    return selector_items
 
 def get_files_list_answer(resources):
     files = []
