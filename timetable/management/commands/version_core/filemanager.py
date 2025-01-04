@@ -24,6 +24,7 @@ class FileManager:
             self.TIMETABLE_LINK = Setting.objects.get(key='analyze_url').value
         except Setting.DoesNotExist:
             self.TIMETABLE_LINK = "https://www.vstu.ru/student/raspisaniya/zanyatiy/"
+
     def add_storage(self, storage: StorageManager):
         """
         Добавить новое хранилище.
@@ -43,10 +44,14 @@ class FileManager:
         for file_data in files:
             print("path:", file_data.get_path(), "name:", file_data.get_name())
 
-            # Скачать файл
-            file_path = file_data.download_file(TEMP_DIR)
-            # Конвертировать xls файл в xlsx файл, если это возможно
-            file_path = self.convert_xls_to_xlsx(file_path)
+            try:
+                # Скачать файл
+                file_path = file_data.download_file(TEMP_DIR)
+                # Конвертировать xls файл в xlsx файл, если это возможно
+                file_path = self.convert_xls_to_xlsx(file_path)
+            except Exception as e:
+                print(e)
+                continue
 
             # Рассчитать ресурс, которому соответствует файл
             resource = file_data.get_resource()
