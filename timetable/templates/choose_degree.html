@@ -38,7 +38,7 @@
 
     <div class="degree-cards-container">
         {% for degree in degrees %}
-        <a href="{{ degree.url }}" class="degree-card {{ degree.css_class }}">
+        <a href="{% url 'timetable' %}{{ degree.params }}" class="degree-card {{ degree.css_class }}">
             <h2 class="degree-title">{{ degree.title }}</h2>
             <div class="degree-card-separator-line {{ degree.separator_class }}"></div>
             <img src="{% static 'image/'|add:degree.image %}" alt="{{ degree.title }}" class="degree-image">

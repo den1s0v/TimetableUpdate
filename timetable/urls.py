@@ -11,5 +11,5 @@ urlpatterns = [
     path('admin/auth', views.put_google_auth_file, name='put_google_auth_file'),
     path('admin/settings', views.set_system_params, name='set_system_params'),
     path('admin/snapshot', views.snapshot, name='snapshot'),
-    path('admin/manage_storage', views.manage_storage, name='timetable'),
+    path('admin/manage_storage', views.manage_storage, name='manage_storage'),
 ]
