@@ -88,7 +88,12 @@ def get_files_list_answer(resources):
         download_storage_type = LOCAL_STORAGE_NAME
 
     for resource in resources:
-        last_version = FileVersion.objects.filter(resource=resource).order_by('-last_changed','-timestamp').first()
+        file_versions = FileVersion.objects.filter(resource=resource).order_by('-last_changed','-timestamp')
+        last_version = file_versions.first()
+        if file_versions.count() > 2:
+            last_last_version = file_versions[1]
+        else:
+            last_last_version = None
         storages = Storage.objects.filter(file_version=last_version)
         view_urls = dict()
         archive_urls = dict()
@@ -108,11 +113,13 @@ def get_files_list_answer(resources):
 
         res_data = {
             "name": resource.name,
-            "last_update" : resource.last_update,
+            "last_update" : last_version.timestamp,
             "download_url": download_url,
             "view_urls" : view_urls,
             "archive_urls" : archive_urls
         }
+        if last_last_version is not None:
+            res_data["last_last_update"] = last_last_version.timestamp
 
         files.append(res_data)
 
