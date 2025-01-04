@@ -5,6 +5,7 @@ import fs
 import fs.copy
 from fs.memoryfs import FS
 
+from myproject.settings import ALLOWED_HOSTS, STATIC_URL, STATIC_ROOT
 from timetable.models import Resource, FileVersion, Storage
 
 
@@ -141,7 +142,8 @@ class StorageManager(ABC):
         :return: Запись базы данных.
         """
         storage.resource_url = None
-        storage.download_url = None
+        file = Path(self._fs_root.getsyspath('/')).joinpath(file_dir).relative_to(STATIC_ROOT)
+        storage.download_url = f"https://{ALLOWED_HOSTS[0]}/{STATIC_URL}{file}"
         return storage
 
     def _make_file_public(self, file_dir:str):
