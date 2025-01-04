@@ -96,7 +96,10 @@ class FileManager:
 
             # Удалить временный файл
             file_path.unlink()
-        self.make_other_resource_deprecated(used_resource_ids)
+
+        # Если какие-то файлы были проанализированы, то все остальные файлы перевести в статус deprecated
+        if len(files) > 0:
+            self.make_other_resource_deprecated(used_resource_ids)
 
     @classmethod
     def convert_xls_to_xlsx(cls, xls_file_path:Path|str, dell_xls = True):
