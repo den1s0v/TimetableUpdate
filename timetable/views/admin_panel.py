@@ -9,13 +9,17 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
 from myproject.settings import GOOGLE_AUTH_FILE
-from timetable.apps import AVAILABLE_KEYS
+from timetable.apps import AVAILABLE_KEYS, GOOGLE_DRIVE_STORAGE_MAME, LOCAL_STORAGE_NAME
 from timetable.cron_utils import create_update_timetable_cron_task
 from timetable.models import Task, Snapshot, Setting
 from timetable.task.make_task import make_task
 from timetable.task.snapshot import task_make_snapshot
 
-storage_types = ['Google Drive', 'Yandex Drive', 'Локальное хранилище']
+storage_types = {
+    'Google Drive': GOOGLE_DRIVE_STORAGE_MAME,
+    'Yandex Drive': "",
+    'Локальное хранилище': LOCAL_STORAGE_NAME
+}
 snapshot_types = ['Вся система', 'База данных', 'Google Drive', 'Yandex Drive', 'Локальное хранилище']
 clear_types = ['Вся система', 'Все хранилища', 'Google Drive', 'Yandex Drive', 'Локальное хранилище']
 
