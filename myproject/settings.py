@@ -15,8 +15,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 VIRTUALENV_PATH = Path('/root/.virtualenvs/TimetableUpdate')
 BASE_DIR = Path(__file__).resolve().parent.parent
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "static/"
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "static"
 TEMP_DIR = BASE_DIR / 'temp'
 DATA_STORAGE_DIR = STATIC_ROOT / 'files'
 GOOGLE_AUTH_FILE = BASE_DIR / "auth" / "google_drive_auth.json"
@@ -131,8 +131,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
