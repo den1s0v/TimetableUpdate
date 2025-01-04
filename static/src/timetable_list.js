@@ -1,4 +1,5 @@
 const url = 'https://185.221.153.238/timetable_params';
+const urlStatic = 'https://185.221.153.238/static/';
 
 // Дождаться когда HTML страница загрузится
 document.addEventListener('DOMContentLoaded', () => {
@@ -93,46 +94,137 @@ function responseHandler(data) {
 
         //Добавляем новый селектор
         dropdownContainer.appendChild(select)
+
+        if (data.selector_items.length == 1) {
+            select.style.display = 'none';
+            select.selectedIndex = 1;
+            makeRequest();
+        }
     }
     else if (data.result === "files") {
         const container = document.getElementById("schedule-container");
 
         for (const fileIndex in data.files) {
             const file = data.files[fileIndex]
-            const item = document.createElement('div');
-            item.className = "schedule-item"
-            const name = document.createElement('span');
-            name.className = "file-title";
-            name.textContent = file.name;
-            const lastUpdate = document.createElement('p');
-            lastUpdate.textContent = `Дата изменения: ${file.last_update}`;
-            const viewContainer = document.createElement('div');
-            for (const resourceName in file.view_urls) {
-                const url = file.view_urls[resourceName];
-                const viewItem = document.createElement('a');
-                viewItem.textContent = resourceName;
-                viewItem.href = url;
-                viewContainer.appendChild(viewItem);
-            }
-            const archiveContainer = document.createElement('div');
-            for (const resourceName in file.archive_urls) {
-                const url = file.archive_urls[resourceName];
-                const archiveItem = document.createElement('a');
-                archiveItem.textContent = resourceName;
-                archiveItem.href = url;
-                viewContainer.appendChild(archiveItem);
-            }
-            item.appendChild(name)
-            item.appendChild(lastUpdate)
-            item.appendChild(viewContainer)
-            item.appendChild(archiveContainer)
 
-            container.appendChild(item)
+            const schedule_item = document.createElement('div');
+            schedule_item.className = "schedule-item";
+
+            const headerContainer = getHeaderContainer(file);
+
+            const updateInfo = getUpdateInfo(file);
+
+            const archiveContainer = getArchiveContainer(file);
+
+
+            schedule_item.appendChild(headerContainer)
+            schedule_item.appendChild(updateInfo)
+            schedule_item.appendChild(archiveContainer)
+
+            container.appendChild(schedule_item)
         }
 
     }
 }
+function getHeaderContainer(file){
+    const headerContainer = document.createElement('div');
+    headerContainer.className = "header-container";
 
+    const titleContainer = document.createElement('div');
+    titleContainer.className = "title-container";
+    const itemTitle = document.createElement('span')
+    itemTitle.className = "item-title";
+    itemTitle.textContent = file.name;
+    titleContainer.appendChild(itemTitle);
+
+    const iconContainer = document.createElement('div');
+    iconContainer.className = "icon-container";
+    for (const resourceName in file.view_urls) {
+        const link = document.createElement('a');
+        link.href = file.view_urls[resourceName];
+
+        const picture = document.createElement('img');
+        picture.className = "icon";
+        picture.alt = resourceName;
+        picture.src = getBicIconName(picture.alt);
+        link.appendChild(picture);
+        iconContainer.appendChild(link);
+    }
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = file.download_url;
+
+    const downloadPicture = document.createElement('img');
+    downloadPicture.className = "icon";
+    downloadPicture.alt = "Скачать";
+    downloadPicture.src = getBicIconName(downloadPicture.alt);
+    downloadLink.appendChild(downloadPicture);
+    iconContainer.appendChild(downloadLink);
+
+    headerContainer.appendChild(titleContainer);
+    headerContainer.appendChild(iconContainer);
+
+    return headerContainer;
+}
+
+function getBicIconName(alt) {
+    switch (alt) {
+        case "Скачать":
+            return `${urlStatic}image/big_download_icon.png`
+        case "google drive":
+            return `${urlStatic}image/big_gdrive_icon.png`
+        case "yandex disk":
+            return `${urlStatic}image/big_yadrive_icon.png`
+    }
+}
+
+function getUpdateInfo(file) {
+    const updateInfo = document.createElement('div');
+    updateInfo.className = "update-info";
+    updateInfo.textContent = "Дата изменения: ";
+    const cpan = document.createElement('span');
+    cpan.className = "update-date";
+    cpan.textContent = file.last_update;
+    updateInfo.appendChild(cpan);
+    return updateInfo;
+}
+
+function getArchiveContainer(file) {
+    const archiveContainer = document.createElement('div');
+    archiveContainer.className = "archive-block";
+
+    const image = document.createElement('img');
+    // Добавить добавление картинки
+    image.alt = "Архив";
+    image.className = "archive-image";
+    image.src = `${urlStatic}image/background-for-archive.png`
+    archiveContainer.appendChild(image);
+
+    const archiveIcons = document.createElement('div');
+    for (const resourceName in file.archive_urls) {
+        const link = document.createElement('a')
+        link.href = file.archive_urls[resourceName];
+
+        const archiveImage = document.createElement('img');
+        archiveImage.alt = resourceName;
+        archiveImage.src = getSmallIconName(archiveImage.alt)
+        //Добавить картинку
+        link.appendChild(archiveImage);
+        archiveIcons.appendChild(link);
+    }
+    archiveContainer.appendChild(archiveIcons);
+
+    return archiveContainer;
+}
+
+function getSmallIconName(alt) {
+    switch (alt) {
+        case "google drive":
+            return `${urlStatic}image/small_gdrive_icon.png`
+        case "yandex disk":
+            return `${urlStatic}image/small_yadrive_icon.png`
+    }
+}
 function dellSelectors(targetElement) {
     // Получить список элементов
     const dropdownContainer = document.getElementById('filter-container');

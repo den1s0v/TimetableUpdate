@@ -2,12 +2,11 @@ from pathlib import Path
 
 from django.apps import AppConfig
 
-TAG_CATEGORY_LIST = [
-    'education_form',
-    'degree', # Потом нужно убрать
-    'faculty',
-    'course',
-]
+TAG_CATEGORY_MAP = {
+    'education_form': "Выбрать форму обучения",
+    'faculty': "Выбрать факультет",
+    'course': "Выбрать курс"
+}
 GOOGLE_DRIVE_STORAGE_MAME = "google drive"
 LOCAL_STORAGE_NAME = 'local'
 AVAILABLE_KEYS = {'time_update', 'analyze_url', 'google_json_dir', 'download_storage'}

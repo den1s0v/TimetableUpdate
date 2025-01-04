@@ -4,7 +4,7 @@ from django.http import HttpResponseNotAllowed, JsonResponse, HttpResponse
 from django.shortcuts import render
 
 from timetable.models import Tag, Resource, FileVersion, Storage, Setting
-from ..apps import TAG_CATEGORY_LIST, LOCAL_STORAGE_NAME
+from ..apps import TAG_CATEGORY_MAP, LOCAL_STORAGE_NAME
 
 
 def timetable_list(request):
@@ -93,7 +93,7 @@ def get_resource_by_tag(tags):
 def get_new_selector_answer(categories, related_tags):
     # Определяем следующую категорию
     next_category = None
-    for category in TAG_CATEGORY_LIST:
+    for category in TAG_CATEGORY_MAP.keys():
         if category in categories:
             next_category = category
             break
@@ -105,7 +105,7 @@ def get_new_selector_answer(categories, related_tags):
     answer = {
         "result": "selector",
         "selector_name": next_category,
-        "selector_description": "Выбрать что-то новое",
+        "selector_description": TAG_CATEGORY_MAP.get(next_category, "Выбрать"),
         "selector_items": selector_items
     }
 
@@ -121,7 +121,7 @@ def get_selector_items(tags, next_category):
 def get_files_list_answer(resources):
     files = []
     try:
-         download_storage_type = Setting.objects.get(key='download_storage').value
+        download_storage_type = Setting.objects.get(key='download_storage').value
     except Setting.DoesNotExist:
         download_storage_type = LOCAL_STORAGE_NAME
 
