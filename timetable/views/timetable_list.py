@@ -1,16 +1,54 @@
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponseNotAllowed, JsonResponse, HttpResponse
 
 # Create your views here.
 from django.shortcuts import render
-from openpyxl.compat import deprecated
 
 from timetable.models import Tag, Resource, FileVersion, Storage, Setting
 from ..apps import TAG_CATEGORY_LIST, LOCAL_STORAGE_NAME
 
 
 def timetable_list(request):
-    first_select_items = get_selector_items(Tag.objects.all(), TAG_CATEGORY_LIST[0])
-    return render(request, 'timetable_list.html', {'first_select_items': first_select_items})
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+
+    params = dict(request.GET.dict())
+    match params.get('degree', None):
+        case 'master':
+            tag = Tag.objects.filter(category='degree', name__icontains='магистратура').first()
+            context = {
+                'page_class': 'master-page',
+                'schedule_title': 'Расписания занятий для магистратуры',
+                'degree_title': 'Магистратура',
+                'degree_card_class': 'degree-card-master',
+                'degree_separator_class': 'degree-card-separator-line-master',
+                'degree_image': 'image/master_image.png',
+            }
+        case 'postgraduate':
+            tag = Tag.objects.filter(category='degree', name__icontains='аспирантура').first()
+            context = {
+                'page_class': 'postgraduate-page',
+                'schedule_title': 'Расписания занятий для аспирантуры',
+                'degree_title': 'Аспирантура',
+                'degree_card_class': 'degree-card-postgraduate',
+                'degree_separator_class': 'degree-card-separator-line-postgraduate',
+                'degree_image': 'image/postgraduate_image.png',
+            }
+        case _:
+            tag = Tag.objects.filter(category='degree', name__icontains='бакалавриат').first()
+            context = {
+                'page_class': 'bachelor-page',
+                'schedule_title': 'Расписания занятий для бакалавриата (специалитета)',
+                'degree_title': 'Бакалавриат (специалитет)',
+                'degree_card_class': 'degree-card-bachelor',
+                'degree_separator_class': 'degree-card-separator-line-bachelor',
+                'degree_image': 'image/bachelor_image.png',
+            }
+
+    if tag is None:
+        return HttpResponse(status=500)
+    context['required_key'] = tag.category
+    context['required_value'] = tag.name
+    return render(request, 'timetable_list.html', context)
 
 def timetable_params(request):
     if request.method != 'GET':

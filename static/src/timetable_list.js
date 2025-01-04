@@ -25,9 +25,26 @@ function addEventListenerToSelector(selector) {
     });
 }
 
+// Функция отправки запроса на сервер
+async function makeRequest() {
+    try {
+        const params = getRequestParams()
+        const queryString = new URLSearchParams(params).toString();
+        const response = await fetch(`${url}?${queryString}`)
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`);
+        }
+        const answer = await response.json();
+        responseHandler(answer)
+    } catch (error){
+        console.error('Произошла ошибка:', error);
+    }
+}
+
 // Функция для формирования параметров
 function getRequestParams() {
     const params = {}; // Объект для хранения параметров
+    params[required_key] = required_value;
 
     // Получить список элементов
     const dropdownContainer = document.getElementById('filter-container');
@@ -43,22 +60,6 @@ function getRequestParams() {
     });
 
     return params; // Возвращаем объект с параметрами
-}
-
-// Функция отправки запроса на сервер
-async function makeRequest() {
-    try {
-        const params = getRequestParams()
-        const queryString = new URLSearchParams(params).toString();
-        const response = await fetch(`${url}?${queryString}`)
-        if (!response.ok) {
-            throw new Error(`Ошибка: ${response.status}`);
-        }
-        const answer = await response.json();
-        responseHandler(answer)
-    } catch (error){
-        console.error('Произошла ошибка:', error);
-    }
 }
 
 // Функция обработки ответа
