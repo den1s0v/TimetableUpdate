@@ -151,7 +151,7 @@ def get_files_list_answer(resources):
 
         res_data = {
             "name": resource.name,
-            "last_update" : last_version.timestamp.strftime('%d/%m/%Y %H:%M'),
+            "last_update" : last_version.last_changed.strftime('%d/%m/%Y %H:%M'),
             "download_url": download_url,
             "view_urls" : view_urls,
             "archive_urls" : archive_urls
