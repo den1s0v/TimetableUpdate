@@ -28,3 +28,9 @@ def choose_degree(request):
         },
     ]
     return render(request, 'choose_degree.html', {'degrees': degrees})
+
+def sports_timetable(request):
+    return render(request, 'sports_timetable.html')
+
+def bells_timetable(request):
+    return render(request, 'bells_timetable.html')

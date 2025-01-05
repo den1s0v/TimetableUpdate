@@ -30,21 +30,21 @@
 <main>
   <div class="schedule-grid">
     <!-- Карточка расписания занятий -->
-    <a href="choose_degree" class="card">
+    <a href="{% url 'choose_degree' %}" class="card">
       <h2 class="card-title">Расписание занятий</h2>
       <div class="separator-line"></div>
       <img src="{% static 'image/schedule-icon.png' %}" alt="Расписание занятий" class="card-image">
     </a>
 
     <!-- Пример других карточек -->
-    <a href="bells.html" class="card">
+    <a href="{% url 'bells_timetable' %}" class="card">
       <h2 class="card-title">Расписание звонков</h2>
       <div class="separator-line"></div>
       <img src="{% static 'image/bells-icon.png' %}" alt="Расписание звонков" class="card-image">
     </a>
 
     <!-- Кликабельная карточка расписания учебно-тренировочных занятий -->
-    <a href="sports-schedule.html" class="card">
+    <a href="{% url 'sports_timetable' %}" class="card">
       <h2 class="card-title">Расписание учебно-тренировочных занятий в спортивных отделениях</h2>
       <div class="separator-line"></div>
       <img src="{% static 'image/sports-icon.png' %}" alt="Расписание учебно-тренировочных занятий в спортивных отделениях" class="card-image">

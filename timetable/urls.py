@@ -6,6 +6,9 @@ urlpatterns = [
     path('choose_degree', views.choose_degree, name='choose_degree'),  # Главная страница
     path('timetable', views.timetable_list, name='timetable'),
     path('timetable_params', views.timetable_params, name='timetable_params' ),
+    path('bells_timetable', views.bells_timetable, name='bells_timetable'),
+    path('sports_timetable', views.sports_timetable, name='sports_timetable'),
+
     path('admin/', views.admin_panel, name='admin_panel'),
     path('login/', views.admin_login, name='admin_login'),
     path('admin/auth', views.put_google_auth_file, name='put_google_auth_file'),
