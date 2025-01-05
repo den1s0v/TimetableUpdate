@@ -26,6 +26,49 @@ function addEventListenerToSelector(selector) {
     });
 }
 
+// Функция для определения семестра и учебного года
+function updateScheduleTitle() {
+    const titleElement = document.getElementById('scheduleTitle');
+    const semesterElement = document.getElementById('semester');
+    const yearRangeElement = document.getElementById('yearRange');
+
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // Месяцы идут от 0 до 11, поэтому добавляем 1
+    const currentDay = currentDate.getDate();
+
+    let semester;
+    let yearStart;
+    let yearEnd;
+
+    // Определяем семестр на основе текущей даты
+    if ((currentMonth > 7) || (currentMonth === 7 && currentDay >= 20) || (currentMonth <= 2) || (currentMonth === 2 && currentDay <= 10)) {
+        // С 20 июля по 10 февраля - 1-й семестр
+        semester = '1-й';
+        if (currentMonth > 6) {
+            yearStart = currentYear;
+            yearEnd = currentYear + 1;
+        } else {
+            yearStart = currentYear - 1;
+            yearEnd = currentYear;
+        }
+    } else if ((currentMonth > 2 && currentMonth < 7) || (currentMonth === 2 && currentDay >= 11) || (currentMonth === 7 && currentDay <= 19)) {
+        // С 11 февраля по 19 июля - 2-й семестр
+        semester = '2-й';
+        yearStart = currentYear - 1;
+        yearEnd = currentYear;
+    }
+
+    // Устанавливаем значения в HTML
+    semesterElement.textContent = semester;
+    yearRangeElement.textContent = `${yearStart}-${yearEnd}`;
+}
+
+
+// Вызываем функцию при загрузке страницы
+window.onload = updateScheduleTitle;
+
+
 // Функция отправки запроса на сервер
 async function makeRequest() {
     try {

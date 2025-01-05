@@ -4,7 +4,7 @@
 <head>
     <link rel="icon" href="{% static 'image/icon.png' %}" type="image/x-icon">
     <meta charset="UTF-8">
-    <title>Расписания занятий для бакалавриата (специалитета)</title>
+    <title>{{ head_title }}</title>
     <link rel="stylesheet" href="{% static 'style/style.css' %}">
     <script src="{% static 'src/timetable_list.js' %}"></script>
 </head>
@@ -16,7 +16,7 @@
         <a href="{% url 'index' %}">
             <img src="{% static 'image/Logo_vstu_rus.png' %}" alt="Логотип ВУЗа" class="logo">
         </a>
-        <h1 class="title" id="scheduleTitle">{{ schedule_title }}</h1>
+        <h1 class="title" id="scheduleTitle">{{ schedule_title }} на <span id="semester"></span> семестр <span id="yearRange"></span> года</h1>
     </div>
 </header>
 

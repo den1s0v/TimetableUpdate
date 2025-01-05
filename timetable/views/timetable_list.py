@@ -16,6 +16,7 @@ def timetable_list(request):
         case 'master':
             tag = Tag.objects.filter(category='degree', name__icontains='магистратура').first()
             context = {
+                'head_title': 'Расписания занятий для магистратуры',
                 'page_class': 'master-page',
                 'schedule_title': 'Расписания занятий для магистратуры',
                 'degree_title': 'Магистратура',
@@ -26,6 +27,7 @@ def timetable_list(request):
         case 'postgraduate':
             tag = Tag.objects.filter(category='degree', name__icontains='аспирантура').first()
             context = {
+                'head_title': 'Расписания занятий для аспирантуры',
                 'page_class': 'postgraduate-page',
                 'schedule_title': 'Расписания занятий для аспирантуры',
                 'degree_title': 'Аспирантура',
@@ -36,6 +38,7 @@ def timetable_list(request):
         case _:
             tag = Tag.objects.filter(category='degree', name__icontains='бакалавриат').first()
             context = {
+                'head_title': 'Расписания занятий для бакалавриата (специалитета)',
                 'page_class': 'bachelor-page',
                 'schedule_title': 'Расписания занятий для бакалавриата (специалитета)',
                 'degree_title': 'Бакалавриат (специалитет)',
