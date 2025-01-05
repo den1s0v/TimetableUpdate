@@ -33,7 +33,7 @@ def timetable_list(request):
                 'degree_title': 'Аспирантура',
                 'degree_card_class': 'degree-card-postgraduate',
                 'degree_separator_class': 'degree-card-separator-line-postgraduate',
-                'degree_image': 'image/postgraduate_image.png',
+                'degree_image': 'image/phd_image.png',
             }
         case _:
             tag = Tag.objects.filter(category='degree', name__icontains='бакалавриат').first()
