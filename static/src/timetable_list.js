@@ -1,6 +1,30 @@
 const url = 'https://185.221.153.238/timetable_params';
 const urlStatic = 'https://185.221.153.238/static/';
 
+
+function adjustFontSizeToFit() {
+    const titles = document.querySelectorAll('.card-title, .degree-title');
+
+    titles.forEach(title => {
+        let fontSize = 2; // Начинаем с максимального размера шрифта
+        title.style.fontSize = fontSize + 'rem';
+
+        // Проверяем, помещается ли текст с максимальным размером
+        if (title.scrollHeight > title.clientHeight) {
+            // Уменьшаем шрифт, пока текст не помещается внутри высоты заголовка
+            while (title.scrollHeight > title.clientHeight) {
+                fontSize -= 0.05; // Уменьшаем размер шрифта
+                title.style.fontSize = fontSize + 'rem';
+
+                // Прекращаем уменьшение, если размер шрифта достигает минимального значения
+                if (fontSize <= 0.8) {
+                    break;
+                }
+            }
+        }
+    });
+}
+
 // Дождаться когда HTML страница загрузится
 document.addEventListener('DOMContentLoaded', () => {
     // Получить первый элемент в списке
@@ -8,6 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addEventListenerToSelector(first_element)
 });
+
+
+// Запускаем функцию после загрузки страницы
+window.addEventListener('load', adjustFontSizeToFit);
+
+// Перезапускаем функцию при изменении размера окна
+window.addEventListener('resize', adjustFontSizeToFit);
+
 
 
 // Функция добавления слушателя
