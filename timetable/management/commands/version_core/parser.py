@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from .file_data import FileData
 
+logger = logging.getLogger(__name__)  # Получаем логгер для текущего модуля
 
 class WebParser:
     """
@@ -39,9 +40,7 @@ class WebParser:
         try:
             content = WebParser.__get_page_content(web_link)
         except Exception as e:
-            logger = logging.getLogger(__name__)  # Получаем логгер для текущего модуля
             logger.error("Error in get_files_from_webpage", e, exc_info=True)
-            print(e)
             return files
 
         header3_text = ""  # Заголовок 3 уровня
@@ -102,7 +101,7 @@ class WebParser:
 
                 # Создаем объект файла и добавляем в список
                 file_data = FileData(current_path, link_url, last_update)
-                print([current_path, link_url, last_update])
+                logger.debug(f"Find file with path: {current_path}; last update: {last_update}")
                 files.append(file_data)
 
             else:
