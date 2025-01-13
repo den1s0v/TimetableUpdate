@@ -34,7 +34,6 @@ class Resource(models.Model):
     last_update = models.DateTimeField(auto_now=True, verbose_name="Дата последнего обновления")  # Автоматическое обновление времени
     name = models.CharField(max_length=255, verbose_name="Имя ресурса")  # Имя ресурса
     path = models.TextField(null=True, blank=True, default=None, verbose_name="Путь к ресурсу")  # Путь
-    metadata = models.JSONField(null=True, blank=True, default=None, verbose_name="Метаданные")  # JSON-данные
     tags = models.ManyToManyField(
         'Tag',
         related_name='resources',

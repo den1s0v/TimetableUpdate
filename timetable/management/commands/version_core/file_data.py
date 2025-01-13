@@ -569,20 +569,6 @@ class FileData:
         # Разделяем строку по заданному шаблону
         return re.split(regex_pattern, string)
 
-    def get_json(self):
-        """
-        Создаёт json файл с параметрами ресурса
-        TODO: Расшифровать поля в json файле
-        :return:
-        """
-        json_data = {
-            "degree": self.get_degree(),
-            "education_form": self.get_education_form(),
-            "faculty": self.get_faculty(),
-            "course": self.get_course()
-        }
-        return json.dumps(json_data, indent=4)
-
     def get_tags(self):
         l = []
         degree = self.get_degree()
@@ -612,7 +598,6 @@ class FileData:
         new_resource = Resource()
         new_resource.path = self.get_correct_path()
         new_resource.name = self.get_name()
-        new_resource.metadata = self.get_json()
         new_resource.add_tags(*self.get_tags())
         new_resource.deprecated = False
         return new_resource
