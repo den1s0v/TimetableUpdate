@@ -62,6 +62,23 @@ class StorageManager(ABC):
         new_storage.file_version = file_version
         new_storage.save()
 
+    def clear_storage(self):
+        """
+        Очищает всё хранилище, удаляет все записи о себе в базе данных.
+        """
+        # Удалить все записи в базе данных о себе
+        self.__clear_storage_in_db()
+
+        # Удалить каждый объект в корневой папке
+        for path in self._fs_root.listdir("/"):
+            print("clear in", self._storage_type, path)
+            # Удалить путь, даже если в нём есть файлы
+            if self._fs_root.isdir(path):
+                self._fs_root.removetree(path)
+            # Удалить файл
+            else:
+                self._fs_root.remove(path)
+
     def dell_storages_by_resource(self, resource:Resource, need_dell_file_versions = False):
         """
         Удаляет записи с информацией о файле в этом хранилище по ресурсу.
@@ -95,7 +112,7 @@ class StorageManager(ABC):
         for storage in storages:
             self.dell_storages_by_file_version(storage)
 
-    def dell_file_by_storage(self, storage:Storage):
+    def __dell_file_by_storage(self, storage:Storage):
         """
         Удаляет запись с информацией о файле в этом хранилище.
         :param storage: Запись в базе данных с информацией о файле на этом ресурсе.
@@ -111,24 +128,6 @@ class StorageManager(ABC):
         # Удалить запись о хранилище
         storage.delete()
         return True
-
-    def clear_storage(self):
-        """
-        Очищает всё хранилище, удаляет все записи о себе в базе данных.
-        """
-        # Удалить все записи в базе данных о себе
-        self.__clear_storage_in_db()
-
-        # Удалить каждый объект в корневой папке
-        for path in self._fs_root.listdir("/"):
-            print("clear in", self._storage_type, path)
-            # Удалить путь, даже если в нём есть файлы
-            if self._fs_root.isdir(path):
-                self._fs_root.removetree(path)
-            # Удалить файл
-            else:
-                self._fs_root.remove(path)
-
 
     def get_storage_type(self):
         return self._storage_type
