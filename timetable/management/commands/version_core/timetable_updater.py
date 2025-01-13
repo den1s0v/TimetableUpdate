@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from myproject.settings import TEMP_DIR, LIBREOFFICE_EXE
-from timetable.models import Resource, FileVersion, Tag, Setting
+from timetable.models import Resource, FileVersion, Tag, Setting, Storage
 from .file_data import FileData
 from .parser import WebParser
 from .storage_manager import StorageManager
@@ -63,6 +63,8 @@ class TimetableUpdater:
                 else:
                     self._update_existing_resource(resource_from_db, resource, file_version, file_path)
                     logger.info(f"Updated existing resource: {resource_from_db}")
+                    # Разослать уведомления об обновлении ресурса
+                    self.file_update_notification(resource_from_db, file_version)
 
                 # Добавить ресурс в множество обработанных
                 processed_resource_ids.add(resource.id)
@@ -151,3 +153,9 @@ class TimetableUpdater:
             resource.deprecated = True
             resource.save()
             logger.info(f"Resource deprecated: {resource}")
+
+    def file_update_notification(self, storage:Storage, file_version:FileVersion):
+        """
+        Заглушка для уведомлений пользователей.
+        """
+        pass
