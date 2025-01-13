@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -60,6 +60,46 @@ MIDDLEWARE = [
 CSRF_COOKIE_SECURE = True
 
 ROOT_URLCONF = 'myproject.urls'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  # Сохраняем существующие логгеры
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {  # Обработчик для вывода в терминал
+            'level': 'DEBUG',  # Уровень логирования
+            'class': 'logging.StreamHandler',  # Класс обработчика
+            'formatter': 'simple',  # Формат вывода
+        },
+        'file': {  # Обработчик для вывода в файл
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'timetable_updater.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],  # Используем оба обработчика
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'timetable': {  # Логгер для вашего приложения
+            'handlers': ['console', 'file'],  # Используем оба обработчика
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 TEMPLATES = [
     {
