@@ -27,22 +27,20 @@
 Запуск и использование
 -----------
 
-- Запуск сайта — обычное
+- Запуск сайта — как обычно для Django
 ```bash
 python manage.py runserver
 ```
 
-	
 
 - Вне линукса можно работать без cron
 
-```bash
-cd TimetableUpdate/timetable/management/commands/update_timetable.py
-```
-Разовый запуск задачи обновления файлов:
+  Разовый запуск задачи обновления файлов:
+
 ```bash
 python manage.py update_timetable
 ```
+Подробнее см. в `TimetableUpdate/timetable/management/commands/update_timetable.py`
 
 
 ## TODO
